@@ -1,0 +1,11 @@
+---
+// Divisor com as classes CSS da HeroUI (separator). Decorativo: o <hr> já tem o papel de separador.
+interface Props {
+  orientacao?: 'horizontal' | 'vertical';
+  class?: string;
+}
+
+const { orientacao = 'horizontal', class: className = '' } = Astro.props;
+---
+
+<hr class:list={['separator', `separator--${orientacao}`, className]} aria-orientation={orientacao} />

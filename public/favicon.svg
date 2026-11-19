@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#fff"/>
+  <defs>
+    <filter id="preto" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+    </filter>
+  </defs>
+  <image href="/brand/simbolo-branco.png" x="4" y="12" width="56" height="40" preserveAspectRatio="none" filter="url(#preto)"/>
+</svg>

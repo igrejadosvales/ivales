@@ -1,0 +1,332 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroImersivo from '../components/ui/HeroImersivo.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+import Accordion from '../components/ui/Accordion.astro';
+import CartaoImagem from '../components/ui/CartaoImagem.astro';
+import CartaoIcone from '../components/ui/CartaoIcone.astro';
+
+// Conteúdo da home migrado do site atual (igrejadosvales.com.br), na nossa identidade:
+// creme, azul, DM Sans e os componentes do design system.
+
+const envolvimento = [
+  {
+    titulo: 'Voluntariado',
+    texto: 'Participe da missão de promover o evangelho servindo em um time de voluntários.',
+    href: '/voluntariado',
+    imagem: {
+      src: '/images/voluntariado.png',
+      alt: 'Dois voluntários sorrindo durante uma ação da igreja',
+      width: 734,
+      height: 890,
+    },
+  },
+  {
+    titulo: 'iGrupos',
+    texto: 'Participe de um pequeno grupo de discipulado para aprender mais sobre Jesus e sua vontade.',
+    href: '/igrupos',
+    imagem: {
+      src: '/images/pequeno-grupo.jpg',
+      alt: 'Dois jovens sorrindo juntos em um evento da Igreja dos Vales',
+      width: 800,
+      height: 533,
+    },
+  },
+  {
+    titulo: 'Ministérios',
+    texto: 'Descubra os ministérios da igreja e encontre um lugar para servir com seus dons.',
+    href: '/ministerios',
+    imagem: {
+      src: '/images/ministerios.jpg',
+      alt: 'Dois jovens sorrindo em um evento da Igreja dos Vales',
+      width: 800,
+      height: 533,
+    },
+  },
+] as const;
+
+const perguntas = [
+  {
+    pergunta: 'Como faço para me tornar membro?',
+    resposta:
+      "Para se tornar membro, você pode participar do nosso curso de integração 'Bem-vindo à Família', que acontece periodicamente. Fale com um de nossos líderes ou visite o balcão de informações após o culto para saber a próxima data.",
+  },
+  {
+    pergunta: 'Quais são os horários dos cultos?',
+    resposta:
+      'Nossos cultos acontecem todos os domingos às 10h e às 18h. Também temos cultos de oração às terças-feiras às 20h e cultos de jovens aos sábados às 19h30.',
+  },
+  {
+    pergunta: 'A igreja possui ministério infantil?',
+    resposta:
+      "Sim! Temos o 'Vales Kids', um ministério dedicado a cuidar e ensinar crianças de 0 a 12 anos. As crianças são divididas por faixa etária e participam de atividades lúdicas e bíblicas durante todos os nossos cultos de domingo.",
+  },
+  {
+    pergunta: 'Como posso participar de um pequeno grupo?',
+    resposta:
+      "É muito simples! Acesse a seção 'iGrupos' aqui no nosso site para encontrar um grupo próximo a sua casa ou com o seu perfil. Você pode entrar em contato diretamente com o líder do grupo pelo WhatsApp.",
+  },
+  {
+    pergunta: 'Onde a igreja está localizada?',
+    resposta:
+      'Estamos localizados na Rua Santa Clara, 192 - Gravataí. Temos estacionamento próprio e fácil acesso por transporte público.',
+  },
+] as const;
+---
+
+<BaseLayout
+  title="Igreja dos Vales"
+  description="Igreja dos Vales: um lugar de fé, esperança e amor. Cultos, iGrupos, voluntariado e mensagens."
+  headerTransparente
+>
+  <HeroImersivo
+    eyebrow="Bem-vindo"
+    titulo="Igreja dos Vales"
+    texto="Um lugar de fé, esperança e amor. Junte-se a nós para adorar e servir."
+    imagem={{
+      src: '/images/hero.jpg',
+      srcset: '/images/hero-900.jpg 900w, /images/hero.jpg 1920w',
+      alt: 'Pastor sorrindo e apontando para a plateia enquanto segura um microfone, diante de um fundo azul escuro',
+      width: 1672,
+      height: 941,
+    }}
+  >
+    <Button href="#mensagens" variante="primario">Assista ao Vivo</Button>
+    <Button href="/sobre" variante="secundario">Saiba Mais</Button>
+  </HeroImersivo>
+
+  <!-- Mensagens -->
+  <Section id="mensagens" class="home-secao">
+    <div class="grid items-center gap-10 lg:grid-cols-2">
+      <div class="aspect-video overflow-hidden rounded-cartao border border-border bg-canvas">
+        <iframe
+          src="https://www.youtube.com/embed/PRPB9Ay8Ysk"
+          title="Último culto online"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          class="h-full w-full border-0"
+        ></iframe>
+      </div>
+
+      <div>
+        <p class="text-sm font-semibold tracking-wide text-accent-text uppercase">Mensagens</p>
+        <h2 class="mt-3 text-titulo">
+          Último culto online
+        </h2>
+        <p class="mt-4 text-lg text-ink-muted">
+          Assista ao culto ao vivo da Igreja dos Vales e acompanhe uma mensagem de fé, comunhão e esperança.
+        </p>
+        <div class="mt-6">
+          <Button href="https://www.youtube.com/watch?v=PRPB9Ay8Ysk" variante="primario">Assistir ao culto</Button>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Avisos -->
+  <Section
+    id="avisos"
+    titulo="Aqui é a casa da sua família"
+    subtitulo="Avisos, eventos e oportunidades para participar."
+    alinhamento="centro"
+    class="home-secao"
+  >
+    <div class="grid gap-8 text-left md:grid-cols-3">
+      <div class="border-t-2 border-accent pt-5">
+        <h3 class="text-xl font-bold text-ink">Cultos de domingo</h3>
+        <p class="mt-3 text-lg text-ink-muted">10h, 17h e 20h</p>
+        <p class="mt-1 text-ink-muted">Em Porto Alegre, às 19h.</p>
+      </div>
+      <div class="border-t-2 border-accent pt-5">
+        <h3 class="text-xl font-bold text-ink">Conheça as extensões</h3>
+        <p class="mt-3 text-ink-muted">Acompanhe o trabalho da Igreja dos Vales em outras localidades.</p>
+        <a
+          href="https://www.instagram.com/ivalespoa/"
+          class="mt-4 inline-flex font-semibold text-accent-text underline-offset-4 hover:underline"
+        >
+          Instagram @ivalespoa <span aria-hidden="true" class="ml-1">→</span>
+        </a>
+      </div>
+      <div class="border-t-2 border-accent pt-5">
+        <h3 class="text-xl font-bold text-ink">Culto online</h3>
+        <p class="mt-3 text-ink-muted">Acompanhe nossas celebrações pelo YouTube.</p>
+        <a
+          href="https://www.youtube.com/@ivalesonline"
+          class="mt-4 inline-flex font-semibold text-accent-text underline-offset-4 hover:underline"
+        >
+          Acessar o YouTube <span aria-hidden="true" class="ml-1">→</span>
+        </a>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Como se envolver -->
+  <Section
+    id="envolva-se"
+    titulo="Como se Envolver"
+    subtitulo="Descubra como servir com seus dons."
+    alinhamento="centro"
+    tom="elevado"
+    class="home-secao"
+  >
+    <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {
+        envolvimento.map((item) => (
+          <li>
+            <CartaoImagem titulo={item.titulo} href={item.href} imagem={item.imagem}>
+              {item.texto}
+            </CartaoImagem>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <!-- Outras formas de contribuir -->
+  <Section
+    id="contribuir"
+    titulo="Outras formas de contribuir"
+    subtitulo="Apoie a missão da igreja."
+    alinhamento="centro"
+    class="home-secao"
+  >
+    <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <li>
+        <CartaoIcone titulo="Oferte Pessoalmente">
+          Você pode contribuir pessoalmente em qualquer uma de nossas unidades durante os cultos de fim de semana.
+          <svg
+            slot="icone"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-8 w-8"
+          >
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            <path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.07c.86.86 2.25.86 3.11 0l.85-.85a2.17 2.17 0 0 1 3.07 0c.86.86.86 2.25 0 3.11L12 17" />
+          </svg>
+        </CartaoIcone>
+      </li>
+      <li>
+        <CartaoIcone titulo="Envie pelo Correio">
+          A/C: Financeiro Igreja dos Vales
+          <span class="mt-1 block">Rua Santa Clara, 192</span>
+          <span class="block">Gravataí</span>
+          <svg
+            slot="icone"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-8 w-8"
+          >
+            <rect width="20" height="16" x="2" y="4" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg>
+        </CartaoIcone>
+      </li>
+      <li>
+        <CartaoIcone titulo="Bens e Ativos">
+          Se você possui outros ativos (veículos, imóveis, etc) que gostaria de ofertar, por favor envie um email para
+          <a
+            href="mailto:financeiro@igrejadosvales.com.br"
+            class="font-semibold break-all text-accent-text underline-offset-4 hover:underline"
+          >
+            financeiro@igrejadosvales.com.br
+          </a>
+          <svg
+            slot="icone"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-8 w-8"
+          >
+            <path d="M6 3h12l4 6-10 13L2 9Z" />
+            <path d="M11 3 8 9l4 13 4-13-3-6" />
+            <path d="M2 9h20" />
+          </svg>
+        </CartaoIcone>
+      </li>
+    </ul>
+  </Section>
+
+  <!-- FAQs -->
+  <Section id="faq" titulo="FAQs" subtitulo="Respostas para suas principais dúvidas." class="home-secao">
+    <Accordion itens={perguntas} titulo="Perguntas frequentes da Igreja dos Vales" />
+  </Section>
+
+  <!-- Contato -->
+  <Section id="contato" titulo="Vamos ficar mais próximos!" tom="elevado" class="home-secao">
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div data-tom="destaque" class="rounded-cartao bg-accent p-8 text-on-accent lg:p-10">
+        <p class="text-sm font-semibold tracking-wide uppercase">Entre em Contato</p>
+        <h3 class="mt-3 text-2xl leading-tight font-bold text-on-accent">
+          Fique por dentro de tudo aqui da Igreja dos Vales!
+        </h3>
+        <p class="mt-3 text-lg text-on-accent">Deixe seu contato e vamos te enviar materiais exclusivos!</p>
+        <div class="mt-6">
+          <Button href="/contato" variante="secundario">Conecte-se</Button>
+        </div>
+      </div>
+
+      <div class="rounded-cartao border border-border bg-canvas p-8">
+        <h3 class="text-lg font-semibold text-ink">Fale com a gente</h3>
+        <ul class="mt-4 space-y-4 text-ink-muted">
+          <li>
+            <a
+              href="mailto:contato@igrejadosvales.com"
+              class="font-semibold break-all text-accent-text underline-offset-4 hover:underline"
+            >
+              contato@igrejadosvales.com
+            </a>
+          </li>
+          <li>
+            <a href="tel:+5511999999999" class="font-semibold text-accent-text underline-offset-4 hover:underline">
+              (11) 99999-9999
+            </a>
+          </li>
+          <li>Rua Santa Clara, 192 - Gravataí</li>
+        </ul>
+        <div class="mt-6">
+          <Button href="/contato" variante="primario">Fale com a gente</Button>
+        </div>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>
+
+<script>
+  const secoes = document.querySelectorAll<HTMLElement>('.home-secao');
+
+  if ('IntersectionObserver' in window) {
+    const observador = new IntersectionObserver(
+      (entradas, observer) => {
+        entradas.forEach((entrada) => {
+          if (!entrada.isIntersecting) return;
+          entrada.target.classList.add('home-secao-visivel');
+          observer.unobserve(entrada.target);
+        });
+      },
+      { threshold: 0.12 },
+    );
+
+    secoes.forEach((secao) => observador.observe(secao));
+  } else {
+    secoes.forEach((secao) => secao.classList.add('home-secao-visivel'));
+  }
+</script>

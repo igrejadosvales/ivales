@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Container from '../components/ui/Container.astro';
+import Card from '../components/ui/Card.astro';
+import Chip from '../components/ui/Chip.astro';
+import Accordion from '../components/ui/Accordion.astro';
+import FormularioContato from '../components/islands/FormularioContato';
+import {
+  EMAIL_CONTATO,
+  ENDERECO_CONTATO,
+  TELEFONE_EXIBICAO,
+  WHATSAPP_CONTATO,
+} from '../lib/contato';
+
+const whatsappBase = `https://wa.me/${WHATSAPP_CONTATO}`;
+---
+
+<BaseLayout
+  title="Contato"
+  description="Entre em contato com a Igreja dos Vales: horários de culto, endereço, WhatsApp, pedidos de oração e atendimento pastoral."
+>
+  <section class="relative overflow-hidden bg-canvas py-secao lg:py-secao-lg">
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
+    >
+    </div>
+    <Container class="relative">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-semibold tracking-wide text-accent-text uppercase">Fale com a gente</p>
+        <h1 class="mt-4 text-hero text-ink">
+          Estamos aqui por você<br />
+          <span class="text-accent-text">e pela sua família.</span>
+        </h1>
+        <p class="mx-auto mt-6 max-w-2xl text-lg text-ink-muted">
+          Seja para planejar sua primeira visita, enviar um pedido de oração, encontrar um iGrupo ou conversar com nossa equipe pastoral, queremos caminhar ao seu lado.
+        </p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <Chip>Domingos às 10h e 19h</Chip>
+          <Chip>Quartas às 20h</Chip>
+          <Chip>Sábados às 19h (Jovens)</Chip>
+        </div>
+      </div>
+    </Container>
+  </section>
+
+  <Section id="canais" titulo="Canais de atendimento" eyebrow="Como nos encontrar" tom="elevado">
+    <div class="grid gap-6 md:grid-cols-3">
+      <Card titulo="Visite nossos cultos">
+        <p class="font-semibold text-ink">{ENDERECO_CONTATO}</p>
+        <p class="mt-2 text-sm text-ink-muted">
+          Domingos às 10h e 19h • Quarta-feira às 20h • Sábado às 19h (Jovens). Estacionamento e recepção prontos para acolher sua família.
+        </p>
+      </Card>
+
+      <Card titulo="WhatsApp e Telefone" href={whatsappBase}>
+        <p class="font-semibold text-ink">{TELEFONE_EXIBICAO}</p>
+        <p class="mt-2 text-sm text-ink-muted">
+          Atendimento da secretaria e acolhimento de segunda a sexta, das 9h às 18h.
+        </p>
+        <p class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-accent-text">
+          Conversar no WhatsApp <span aria-hidden="true">→</span>
+        </p>
+      </Card>
+
+      <Card titulo="E-mail e Secretaria" href={`mailto:${EMAIL_CONTATO}`}>
+        <p class="break-all font-semibold text-ink">{EMAIL_CONTATO}</p>
+        <p class="mt-2 text-sm text-ink-muted">
+          Para documentos, parcerias, convites, comunicação e assuntos administrativos.
+        </p>
+        <p class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-accent-text">
+          Enviar e-mail <span aria-hidden="true">→</span>
+        </p>
+      </Card>
+    </div>
+  </Section>
+
+  <Section
+    id="mensagem"
+    titulo="Fale conosco agora"
+    eyebrow="Atendimento e Oração"
+    tom="padrao"
+  >
+    <div class="grid items-start gap-8 lg:grid-cols-12">
+      <div class="lg:col-span-7">
+        <FormularioContato client:load whatsappBase={whatsappBase} />
+      </div>
+
+      <aside class="space-y-6 rounded-cartao border border-border bg-surface p-6 sm:p-8 lg:col-span-5" aria-label="Informações para visitantes">
+        <div>
+          <Chip variante="azul">Primeira Visita</Chip>
+          <h3 class="mt-4 text-2xl font-bold text-ink">Planejando nos visitar neste domingo?</h3>
+          <p class="mt-2 text-ink-muted">
+            Ficaremos muito felizes em receber você! Ao chegar, procure nossa equipe de Recepção na entrada principal.
+          </p>
+        </div>
+
+        <ul class="space-y-4 border-t border-border pt-6 text-sm">
+          <li>
+            <p class="font-bold text-ink">Vales Kids (Ministério Infantil)</p>
+            <p class="mt-0.5 text-ink-muted">
+              Salas seguras e divididas por faixa etária para crianças durante todos os cultos de domingo.
+            </p>
+          </li>
+          <li>
+            <p class="font-bold text-ink">Espaço de Convivência e Boas-vindas</p>
+            <p class="mt-0.5 text-ink-muted">
+              Após o culto, passe no espaço de boas-vindas para tomar um café conosco e conhecer nossos pastores e líderes.
+            </p>
+          </li>
+          <li>
+            <p class="font-bold text-ink">Apoio e Acessibilidade</p>
+            <p class="mt-0.5 text-ink-muted">
+              Nosso auditório possui acesso facilitado e lugares reservados para pessoas com mobilidade reduzida.
+            </p>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </Section>
+
+  <Section
+    id="duvidas"
+    titulo="Dúvidas frequentes"
+    eyebrow="Perguntas comuns"
+    tom="elevado"
+  >
+    <Accordion
+      titulo="Perguntas frequentes sobre visita e contato"
+      itens={[
+        {
+          pergunta: 'Preciso agendar para participar dos cultos?',
+          resposta:
+            'Não é necessário agendar. A entrada é gratuita e aberta a todas as pessoas. Recomendamos chegar 15 minutos antes para estacionar com tranquilidade e fazer o check-in das crianças no Vales Kids.',
+        },
+        {
+          pergunta: 'Como faço para pedir oração ou aconselhamento pastoral?',
+          resposta:
+            'Você pode selecionar a opção "Pedido de oração" ou "Aconselhamento / Atendimento pastoral" no formulário desta página, ou procurar a equipe de intercessão ao final de qualquer culto.',
+        },
+        {
+          pergunta: 'Como encontro um iGrupo perto da minha casa?',
+          resposta:
+            'Envie uma mensagem pelo formulário selecionando "Quero participar de um iGrupo" ou acesse a Área de Membros para visualizar os grupos por bairro e dia da semana.',
+        },
+      ]}
+    />
+  </Section>
+</BaseLayout>

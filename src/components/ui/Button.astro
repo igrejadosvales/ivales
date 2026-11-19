@@ -1,0 +1,36 @@
+---
+// Botão sem JavaScript com as classes CSS da HeroUI (button, button--primary...).
+// Dentro de ilha React, use o <Button> da HeroUI; aqui é para links e botões simples.
+interface Props {
+  href?: string;
+  variante?: 'primario' | 'secundario' | 'fantasma';
+  type?: 'button' | 'submit';
+  class?: string;
+}
+
+const { href, variante = 'primario', type = 'button', class: className = '' } = Astro.props;
+
+// As classes da HeroUI dão cor (via --accent, --default...), hover, pressionado e anel de foco (--focus).
+// As utilitárias por cima mantêm o nosso formato: 40 px de altura mínima, pílula, texto semibold.
+const base = 'button button--lg h-auto min-h-10 rounded-full px-6 py-2 text-base font-semibold no-underline';
+
+// As classes btn-* deixam a faixa azul (data-tom="destaque") e o escuro trocar as cores: ver global.css.
+// primário: azul com texto branco (sempre). secundário: contorno. fantasma: link sublinhado.
+const variantes = {
+  primario: 'button--primary btn-primario border-2 border-accent',
+  secundario: 'button--outline btn-secundario border-2 border-ink text-ink',
+  fantasma: 'button--ghost btn-fantasma text-ink underline underline-offset-4 hover:bg-transparent hover:text-accent-text',
+};
+---
+
+{
+  href ? (
+    <a href={href} class:list={[base, variantes[variante], className]}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={[base, variantes[variante], className]}>
+      <slot />
+    </button>
+  )
+}

@@ -1,0 +1,291 @@
+@import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+
+/*
+ * HeroUI v3 com import seletivo (orçamento: 20 KB gzip de CSS, conferido por scripts/check-orcamento.ts).
+ * Base, tema padrão e utilitárias; os componentes entram um a um.
+ * O utilities não pode ir em layer(): o Tailwind recusa @utility aninhado.
+ * Ordem: o @theme deste arquivo vem depois do tema da HeroUI, então os nossos tokens vencem nos nomes
+ * repetidos (--color-surface, --color-border, --color-accent, --color-accent-hover, --color-focus).
+ */
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/themes/shared/theme.css";
+@import "@heroui/styles/themes/default/variables.css" layer(theme);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+/* Componentes usados nas páginas estáticas (classes em .astro, 0 JS). */
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/card.css" layer(components);
+@import "@heroui/styles/components/chip.css" layer(components);
+@import "@heroui/styles/components/separator.css" layer(components);
+@import "./heroui-theme.css";
+
+/*
+ * Tema claro como base. Cor principal: azul #1D5FD6. O botão primário é azul com texto branco, em todos os tons.
+ * O logo (pomba laranja) é a marca: não é cor de tema. Seções escuras são tom de seção ([data-tom="escuro"]).
+ * A faixa azul é [data-tom="destaque"]: texto branco; primário azul com borda branca; secundário branco com texto azul;
+ * fantasma em branco.
+ * src/styles/tokens.test.ts confere cada par, por tom, e impede o retorno das cores antigas.
+ */
+@theme {
+  --color-canvas: #ffffff;
+  --color-surface: #f1eee8;
+  --color-border: #dcd7cc;
+  --color-border-strong: #6e684f;
+
+  --color-ink: #2e2c24;
+  --color-ink-muted: #595445;
+
+  --color-accent: #1d5fd6;
+  --color-accent-hover: #1a4fbf;
+  --color-accent-text: #1d5fd6;
+  --color-on-accent: #ffffff;
+
+  --color-focus: #2e2c24;
+
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --text-hero: clamp(2.25rem, 1.5rem + 3.5vw, 3.75rem);
+  --text-titulo: clamp(1.75rem, 1.25rem + 2vw, 2.5rem);
+
+  --spacing-secao: 4rem;
+  --spacing-secao-lg: 6rem;
+
+  --radius-cartao: 1rem;
+}
+
+/* Tom escuro: a própria seção redefine os tokens; os componentes herdam pelo var(), sem variantes. */
+[data-tom="escuro"] {
+  --color-canvas: #0a0a0a;
+  --color-surface: #111111;
+  --color-border: #272727;
+  --color-border-strong: #858a97;
+  --color-ink: #ffffff;
+  --color-ink-muted: #b6b6b6;
+  --color-accent-text: #60a5fa;
+  --color-focus: #ffffff;
+}
+
+/* Faixa azul: o foco (outline dos links e anel dos botões) é branco. Contraste em tokens.test.ts. */
+[data-tom="destaque"] {
+  --color-focus: var(--color-on-accent);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--color-ink);
+    font-weight: 700;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p {
+    line-height: 1.65;
+  }
+
+  /* pretty: evita uma palavra sozinha na última linha de parágrafos e legendas. */
+  p,
+  figcaption {
+    text-wrap: pretty;
+  }
+}
+
+/* Botão primário no escuro: fica só o azul, sem borda branca (a borda da classe é a mesma cor do fundo do botão). */
+[data-tom="escuro"] .btn-primario {
+  border-color: var(--color-accent);
+}
+
+/* Faixa azul (data-tom="destaque"). Fora de @layer de propósito: as utilitárias do Tailwind vencem regra com camada. */
+[data-tom="destaque"] .btn-primario {
+  background-color: var(--color-accent);
+  border-color: var(--color-on-accent);
+  color: var(--color-on-accent);
+}
+
+[data-tom="destaque"] .btn-primario:hover {
+  background-color: var(--color-accent-hover);
+}
+
+/* Secundário na faixa: fundo branco e texto azul, para não se confundir com o primário (azul com borda branca). */
+[data-tom="destaque"] .btn-secundario {
+  background-color: var(--color-on-accent);
+  border-color: var(--color-on-accent);
+  color: var(--color-accent);
+}
+
+[data-tom="destaque"] .btn-secundario:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-surface);
+  color: var(--color-accent);
+}
+
+[data-tom="destaque"] .btn-fantasma,
+[data-tom="destaque"] .btn-fantasma:hover {
+  color: var(--color-on-accent);
+}
+
+/*
+ * Logo da pomba (cabeçalho e rodapé): usa máscara sobre simbolo-branco.png para permitir
+ * transição de cor no hover (branco no escuro/topo transparente e azul após o hover).
+ */
+.logo-pomba-icone {
+  background-color: var(--color-accent);
+  -webkit-mask-image: url("/brand/simbolo-branco.png");
+  mask-image: url("/brand/simbolo-branco.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.logo-pomba:hover .logo-pomba-icone,
+.logo-pomba:focus-visible .logo-pomba-icone {
+  background-color: var(--color-accent-hover);
+}
+
+[data-tom="escuro"] .logo-pomba-icone,
+[data-header][data-topo] .logo-pomba-icone {
+  background-color: var(--color-on-accent);
+}
+
+[data-tom="escuro"] .logo-pomba:hover .logo-pomba-icone,
+[data-tom="escuro"] .logo-pomba:focus-visible .logo-pomba-icone,
+[data-header][data-topo] .logo-pomba:hover .logo-pomba-icone,
+[data-header][data-topo] .logo-pomba:focus-visible .logo-pomba-icone {
+  background-color: var(--color-accent);
+}
+
+/*
+ * Cabeçalho sobre o hero (home): no topo fica transparente, com texto e logo brancos; ao rolar,
+ * o script remove data-topo e valem as classes normais (fundo claro, texto escuro).
+ * Sem JavaScript o atributo nunca aparece, então o cabeçalho permanece sólido.
+ */
+[data-header][data-topo] {
+  background-color: transparent;
+  background-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent);
+  border-color: transparent;
+  backdrop-filter: none;
+  --color-ink: #ffffff;
+  --color-ink-muted: #ececec;
+  --color-accent-text: #ffffff;
+  --color-focus: #ffffff;
+  --color-border: rgb(255 255 255 / 0.4);
+}
+
+/*
+ * Entrada do hero: a foto abre devagar e o texto sobe em cascata. Só opacity e transform
+ * (sem mudança de layout). Desligada por completo com prefers-reduced-motion.
+ */
+@keyframes ivales-surgir {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ivales-aproximar {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ivales-card-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ivales-secao-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.home-secao {
+  opacity: 0;
+  transform: translateY(1.5rem);
+}
+
+.home-secao-visivel {
+  animation: ivales-secao-entrar 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.ministerio-card {
+  animation: ivales-card-entrar 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--card-delay, 0ms);
+}
+
+.hero-imagem {
+  animation: ivales-aproximar 1.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.hero-entrada {
+  animation: ivales-surgir 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.hero-entrada-1 {
+  animation-delay: 0.15s;
+}
+
+.hero-entrada-2 {
+  animation-delay: 0.28s;
+}
+
+.hero-entrada-3 {
+  animation-delay: 0.41s;
+}
+
+.hero-entrada-4 {
+  animation-delay: 0.54s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-imagem,
+  .hero-entrada,
+  .ministerio-card,
+  .home-secao {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+

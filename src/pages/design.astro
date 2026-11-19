@@ -1,0 +1,161 @@
+---
+import cssGlobal from '../styles/global.css?raw';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/ui/Hero.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import VideoEmbed from '../components/ui/VideoEmbed.astro';
+import Accordion from '../components/ui/Accordion.astro';
+import Container from '../components/ui/Container.astro';
+import Chip from '../components/ui/Chip.astro';
+import Separator from '../components/ui/Separator.astro';
+
+// Vitrine de componentes. Só existe em `npm run dev`: o hook de build do astro.config.mjs
+// remove esta página do dist/. noindex por segurança.
+
+// As cores vêm do próprio global.css: a vitrine não repete valores.
+// Base clara = bloco @theme. Tom escuro = bloco [data-tom="escuro"] (só os tokens que ele redefine).
+const tema = /@theme\s*\{([\s\S]*?)\}/.exec(cssGlobal)?.[1] ?? '';
+const escuro = /\[data-tom="escuro"\]\s*\{([\s\S]*?)\}/.exec(cssGlobal)?.[1] ?? '';
+const extrair = (bloco: string) =>
+  [...bloco.matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => ({ nome: m[1] ?? '', hex: m[2] ?? '' }));
+const paletaClara = extrair(tema);
+const paletaEscura = extrair(escuro);
+---
+
+<BaseLayout title="Vitrine de componentes" noindex description="Vitrine dos componentes do design system (somente dev).">
+  <Hero
+    eyebrow="Somente desenvolvimento"
+    titulo="Vitrine de componentes"
+    texto="Todos os componentes do design system, com estados, em um só lugar."
+    imagem={{ src: '/placeholders/hero.svg', alt: 'Imagem de exemplo: vale com montanhas ao fundo', width: 1200, height: 900 }}
+    cta={{ label: 'Botão de exemplo', href: '#botoes' }}
+  />
+
+  <Section id="cores" titulo="Cores" eyebrow="Tokens de src/styles/global.css">
+    <h3 class="text-xl">Base clara (bloco @theme)</h3>
+    <ul class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {
+        paletaClara.map((cor) => (
+          <li class="overflow-hidden rounded-cartao border border-border bg-canvas">
+            <div class="h-14 border-b border-border" style={`background: ${cor.hex};`} aria-hidden="true" />
+            <p class="p-3 text-sm">
+              <span class="block font-semibold">{cor.nome}</span>
+              <span class="text-ink-muted">{cor.hex}</span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+    <h3 class="mt-10 text-xl">Tom escuro (data-tom="escuro")</h3>
+    <ul class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {
+        paletaEscura.map((cor) => (
+          <li class="overflow-hidden rounded-cartao border border-border bg-canvas">
+            <div class="h-14 border-b border-border" style={`background: ${cor.hex};`} aria-hidden="true" />
+            <p class="p-3 text-sm">
+              <span class="block font-semibold">{cor.nome}</span>
+              <span class="text-ink-muted">{cor.hex}</span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section id="logo" titulo="Logo" eyebrow="A pomba: laranja no claro, branca no escuro">
+    <div class="grid gap-6 md:grid-cols-2">
+      <figure class="flex flex-col gap-3">
+        <div class="flex min-h-40 items-center justify-center rounded-cartao border border-border bg-canvas p-6">
+          <img src="/brand/simbolo-laranja.png" alt="Ícone da pomba da Igreja dos Vales, em laranja" width="320" height="230" class="h-20 w-auto" />
+        </div>
+        <figcaption class="text-sm text-ink-muted">simbolo-laranja.png: cabeçalho, sobre fundo claro.</figcaption>
+      </figure>
+      <figure class="flex flex-col gap-3">
+        <!-- O tom escuro vale só no tile, que tem o fundo escuro; a legenda fica no tom claro da seção. -->
+        <div data-tom="escuro" class="flex min-h-40 items-center justify-center rounded-cartao border border-border bg-canvas p-6">
+          <img src="/brand/simbolo-branco.png" alt="Ícone da pomba da Igreja dos Vales, em branco" width="320" height="230" class="h-20 w-auto" />
+        </div>
+        <figcaption class="text-sm text-ink-muted">simbolo-branco.png: rodapé e seções escuras.</figcaption>
+      </figure>
+    </div>
+    <p class="mt-6 text-sm text-ink-muted">O favicon é a pomba laranja sobre fundo preto (favicon-32.png, favicon-192.png, apple-touch-icon.png). Esse fundo aparece bem nas abas claras e escuras.</p>
+  </Section>
+
+  <Section id="tipografia" titulo="Tipografia" eyebrow="DM Sans (títulos e texto)" tom="elevado">
+    <h3 class="text-3xl">Título de cartão com DM Sans</h3>
+    <p class="mt-4 max-w-prose text-lg">
+      Texto de corpo com DM Sans. Acentos e cedilha, como em "cultos da manhã" e "ação de graças", aparecem corretamente.
+    </p>
+    <p class="mt-4 text-sm text-ink-muted">Legenda e texto de apoio, com contraste AA sobre o fundo claro.</p>
+  </Section>
+
+  <Section id="botoes" titulo="Botões" eyebrow="Button">
+    <div class="flex flex-wrap items-center gap-4">
+      <Button href="#botoes">Primário (link)</Button>
+      <Button variante="secundario" href="#botoes">Secundário (link)</Button>
+      <Button variante="fantasma" href="#botoes">Fantasma (link)</Button>
+      <Button>Botão de ação</Button>
+    </div>
+    <p class="mt-4 text-sm text-ink-muted">Use Tab para ver o anel de foco.</p>
+  </Section>
+
+  <Section id="cartoes" titulo="Cartões" eyebrow="Card" tom="elevado">
+    <div class="grid gap-6 md:grid-cols-3">
+      <Card titulo="Cultos" href="#cartoes">Domingos às 10h e quartas às 19h30. Horários a confirmar.</Card>
+      <Card titulo="Ministérios">Ministérios para crianças, jovens, casais e louvor.</Card>
+      <Card titulo="iGrupos" href="#cartoes">Grupos pequenos que se reúnem durante a semana.</Card>
+    </div>
+  </Section>
+
+  <Section id="selos" titulo="Selos e divisor" eyebrow="Chip e Separator">
+    <div class="flex flex-wrap items-center gap-3">
+      <Chip>Domingo</Chip>
+      <Chip variante="azul">Novo</Chip>
+      <Chip>[a confirmar]</Chip>
+    </div>
+    <Separator class="my-6" />
+    <p class="text-sm text-ink-muted">Classes CSS da HeroUI (chip, separator) em .astro, sem JavaScript.</p>
+  </Section>
+
+  <Section id="escuro" titulo="Seção escura" eyebrow="Section, tom escuro" tom="escuro">
+    <p class="max-w-prose text-lg">Tom escuro, usado para contraste pontual. O texto é branco, o azul de detalhe é mais claro e o anel de foco é branco.</p>
+    <div class="mt-6 flex flex-wrap gap-4">
+      <Button href="#escuro">Primário no escuro</Button>
+      <Button variante="secundario" href="#escuro">Secundário no escuro</Button>
+      <Button variante="fantasma" href="#escuro">Fantasma no escuro</Button>
+    </div>
+  </Section>
+
+  <Section id="destaque" titulo="Faixa de destaque" eyebrow="Section, tom destaque" tom="destaque">
+    <p class="max-w-prose text-lg">Usada com moderação, para um chamado de atenção. Texto branco sobre o azul.</p>
+    <div class="mt-6 flex flex-wrap gap-4">
+      <Button variante="secundario" href="#destaque">Botão dentro da faixa</Button>
+      <Button variante="primario" href="#destaque">Primário na faixa</Button>
+      <Button variante="fantasma" href="#destaque">Fantasma na faixa</Button>
+    </div>
+  </Section>
+
+  <Section id="video" titulo="Vídeo" eyebrow="VideoEmbed">
+    <div class="max-w-2xl">
+      <VideoEmbed titulo="Mensagem da semana" legenda="Sem arquivo de vídeo: mostra o bloco de placeholder. Com src local, o vídeo só carrega ao clicar em play." />
+    </div>
+  </Section>
+
+  <Section id="perguntas" titulo="Perguntas frequentes" eyebrow="Accordion" tom="elevado">
+    <Accordion
+      itens={[
+        { pergunta: 'Preciso ser membro para participar?', resposta: 'Não. Todas as pessoas são bem-vindas nos cultos e eventos.' },
+        { pergunta: 'Como entro em um iGrupo?', resposta: 'Escolha um grupo na lista e entre em contato com o líder.' },
+        { pergunta: 'Posso ajudar como voluntário?', resposta: 'Sim. Use o formulário de voluntariado no site.' },
+      ]}
+    />
+  </Section>
+
+  <Section id="container" titulo="Container e seção" eyebrow="Layout">
+    <Container class="rounded-cartao border border-border bg-surface py-6 text-center text-ink">
+      Container: largura máxima com margens laterais responsivas.
+    </Container>
+  </Section>
+</BaseLayout>

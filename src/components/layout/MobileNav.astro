@@ -1,0 +1,81 @@
+---
+import Button from '../ui/Button.astro';
+import { navItems } from '../../lib/navigation';
+
+// "Membros" e "Ofertar" fecham o menu como botões; os demais itens são links.
+const links = navItems.filter((item) => item.href !== '/membros' && item.href !== '/doar');
+const membros = navItems.find((item) => item.href === '/membros');
+const ofertar = navItems.find((item) => item.href === '/doar');
+---
+
+<!-- details/summary: abre e fecha sem JavaScript. O script só acrescenta Escape, fechar ao escolher link e fechar ao crescer a tela. -->
+<details class="lg:hidden">
+  <summary
+    id="menu-toggle"
+    class="inline-flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-full border-2 border-ink text-ink [&::-webkit-details-marker]:hidden"
+  >
+    <span class="sr-only">Menu</span>
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  </summary>
+
+  <nav id="menu-mobile" aria-label="Principal (celular)" class="absolute inset-x-0 top-16 border-b border-border bg-canvas shadow-lg">
+    <ul class="mx-auto flex max-w-6xl flex-col px-4 py-4">
+      {
+        links.map((item) => (
+          <li>
+            <a href={item.href} class="block rounded-md px-3 py-3 text-lg text-ink no-underline hover:bg-surface">
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+      <li class="mt-2 flex gap-2 px-3 pb-2">
+        {
+          ofertar && (
+            <Button href={ofertar.href} variante="secundario" class="flex-1 px-3 text-sm">
+              {ofertar.label}
+            </Button>
+          )
+        }
+        {
+          membros && (
+            <Button href={membros.href} variante="primario" class="flex-1 px-3 text-sm">
+              Área de membros
+            </Button>
+          )
+        }
+      </li>
+    </ul>
+  </nav>
+</details>
+
+<!--
+  is:inline com data-script="menu-mobile": um dos scripts de melhoria progressiva permitidos em
+  página estática (scripts/check-orcamento.ts). Sem ele o menu continua abrindo e fechando.
+-->
+<script is:inline data-script="menu-mobile">
+  (() => {
+    const detalhes = document.querySelector('header details');
+    const botao = document.getElementById('menu-toggle');
+    if (!detalhes || !botao) return;
+
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape' && detalhes.open) {
+        detalhes.open = false;
+        botao.focus();
+      }
+    });
+
+    detalhes.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        detalhes.open = false;
+      });
+    });
+
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (evento) => {
+      if (evento.matches) detalhes.open = false;
+    });
+  })();
+</script>

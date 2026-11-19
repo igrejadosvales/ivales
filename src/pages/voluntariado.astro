@@ -1,0 +1,146 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroImersivo from '../components/ui/HeroImersivo.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Chip from '../components/ui/Chip.astro';
+import FormularioVoluntariado from '../components/islands/FormularioVoluntariado';
+import { WHATSAPP_VOLUNTARIADO } from '../lib/voluntariado';
+
+// A URL é montada aqui, no servidor, e chega pronta à ilha. O JS do formulário não contém
+// nenhuma URL externa literal: o link do WhatsApp só é aberto por ação da pessoa.
+const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
+---
+
+<BaseLayout
+  title="Voluntariado"
+  description="Sirva com propósito na Igreja dos Vales. Descubra onde seus dons se encaixam e faça parte de uma equipe."
+  headerTransparente
+>
+  <HeroImersivo
+    eyebrow="Hangar"
+    titulo="Sirva com propósito, transforme vidas."
+    texto="Cada talento importa. Descubra onde você se encaixa e use seus dons para servir à igreja e à comunidade."
+    alinhamento="centro"
+    imagem={{
+      src: '/images/voluntariado-hero.png',
+      alt: 'Voluntárias conversando entre as cadeiras de uma celebração da Igreja dos Vales',
+      width: 1672,
+      height: 941,
+    }}
+  >
+    <Button href="#caminhos">Quero servir</Button>
+  </HeroImersivo>
+
+  <Section id="caminhos" titulo="Por onde começar?" eyebrow="Dois caminhos" tom="elevado">
+    <div class="grid gap-6 md:grid-cols-2">
+      <Card titulo="Quero ser voluntário" href="#cadastro" class="group">
+        <p>Ainda não sirvo, mas quero descobrir meus dons e começar minha jornada.</p>
+        <p class="mt-5 inline-flex items-center gap-2 font-semibold text-accent-text">
+          Começar agora
+          <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
+        </p>
+      </Card>
+      <Card titulo="Já sou voluntário" href="#area-voluntario" class="group">
+        <p>Já faço parte de uma equipe e quero acessar minha área ou ver escalas.</p>
+        <p class="mt-5 inline-flex items-center gap-2 font-semibold text-accent-text">
+          Ver área do voluntário
+          <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
+        </p>
+      </Card>
+    </div>
+
+    <div id="area-voluntario" class="mt-8 rounded-cartao border border-border bg-canvas p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <Chip variante="azul" class="shrink-0">Em breve</Chip>
+        <div>
+          <h3 class="text-lg font-bold text-ink">Área do voluntário</h3>
+          <p class="mt-1 text-ink-muted">
+            Estamos preparando um espaço para escalas, treinamentos e materiais. Enquanto isso, fale com a
+            liderança da sua equipe.
+          </p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="como-funciona" titulo="Como funciona?" eyebrow="Três passos">
+    <p class="max-w-2xl text-lg text-ink-muted">
+      É simples fazer parte da família de voluntários. Siga a jornada.
+    </p>
+    <ol class="mt-10 grid gap-8 md:grid-cols-3">
+      <li class="flex gap-4 md:flex-col md:gap-3">
+        <span
+          aria-hidden="true"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-on-accent"
+        >
+          1
+        </span>
+        <div>
+          <h3 class="text-xl">Conheça as áreas</h3>
+          <p class="mt-2 text-ink-muted">
+            Explore os ministérios e encontre aquele que faz seu coração bater mais forte.
+          </p>
+        </div>
+      </li>
+      <li class="flex gap-4 md:flex-col md:gap-3">
+        <span
+          aria-hidden="true"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-on-accent"
+        >
+          2
+        </span>
+        <div>
+          <h3 class="text-xl">Cadastre-se</h3>
+          <p class="mt-2 text-ink-muted">
+            Preencha seus dados e conte-nos um pouco sobre sua vontade de servir.
+          </p>
+        </div>
+      </li>
+      <li class="flex gap-4 md:flex-col md:gap-3">
+        <span
+          aria-hidden="true"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-on-accent"
+        >
+          3
+        </span>
+        <div>
+          <h3 class="text-xl">Comece a servir</h3>
+          <p class="mt-2 text-ink-muted">
+            Integre-se à equipe, receba treinamento e comece a impactar vidas.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </Section>
+
+  <Section
+    id="cadastro"
+    titulo="Quero ser voluntário"
+    eyebrow="Cadastro"
+    subtitulo="Responda algumas perguntas e conecte-se à liderança."
+    tom="elevado"
+    alinhamento="centro"
+  >
+    <div class="mx-auto max-w-3xl text-left">
+      <noscript>
+        <p class="mb-4 rounded-cartao border border-border bg-canvas p-4 text-sm text-ink-muted">
+          O cadastro em etapas precisa de JavaScript. Se preferir, fale com a liderança pelo WhatsApp:
+          <a href={whatsappBase} class="font-semibold text-accent-text underline underline-offset-4">
+            (11) 99999-9999
+          </a>.
+        </p>
+      </noscript>
+      <FormularioVoluntariado client:load whatsappBase={whatsappBase} />
+    </div>
+  </Section>
+</BaseLayout>
+
+<style>
+  #caminhos,
+  #area-voluntario,
+  #cadastro {
+    scroll-margin-top: 5rem;
+  }
+</style>

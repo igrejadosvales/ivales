@@ -1,0 +1,60 @@
+/*
+ * Tema da HeroUI apontando para os tokens do src/styles/global.css.
+ * Aqui só entra var(--...) de um token nosso (ou um cálculo sobre ele): nenhuma cor literal.
+ * src/styles/heroui-theme.test.ts confere que cada variável aponta para um token existente.
+ *
+ * O seletor inclui [data-tom] porque uma variável com var() é resolvida no elemento que a declara:
+ * sem redeclarar no escopo do tom, o tom escuro herdaria os valores já resolvidos da base clara.
+ * Fora de @layer de propósito: vence o tema padrão da HeroUI, que fica numa camada.
+ */
+:root,
+[data-tom] {
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink);
+
+  --surface: var(--color-surface);
+  --surface-foreground: var(--color-ink);
+  --surface-secondary: var(--color-surface);
+  --surface-secondary-foreground: var(--color-ink);
+  --surface-tertiary: var(--color-surface);
+  --surface-tertiary-foreground: var(--color-ink);
+
+  --overlay: var(--color-canvas);
+  --overlay-foreground: var(--color-ink);
+
+  --muted: var(--color-ink-muted);
+
+  --default: var(--color-surface);
+  --default-foreground: var(--color-ink);
+
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --accent-foreground: var(--color-on-accent);
+
+  --border: var(--color-border);
+  --separator: var(--color-border);
+  --focus: var(--color-focus);
+  --link: var(--color-accent-text);
+
+  --segment: var(--color-canvas);
+  --segment-foreground: var(--color-ink);
+
+  --field-background: var(--color-canvas);
+  --field-foreground: var(--color-ink);
+  --field-placeholder: var(--color-ink-muted);
+  --field-border: var(--color-border-strong);
+  --field-border-width: 1px;
+
+  /* --radius base 0,5rem: mantém a escala rounded-* do Tailwind igual (a HeroUI a recalcula a partir dele). */
+  --radius: calc(var(--radius-cartao) / 2);
+  --field-radius: calc(var(--radius-cartao) * 0.75);
+}
+
+/* Faixa azul: fundo azul, texto, foco e link brancos. */
+[data-tom="destaque"] {
+  --background: var(--color-accent);
+  --foreground: var(--color-on-accent);
+  --muted: var(--color-on-accent);
+  --focus: var(--color-on-accent);
+  --link: var(--color-on-accent);
+}

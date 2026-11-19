@@ -1,0 +1,56 @@
+---
+import Container from './Container.astro';
+
+interface Props {
+  id?: string;
+  titulo?: string;
+  subtitulo?: string;
+  eyebrow?: string;
+  tom?: 'padrao' | 'elevado' | 'escuro' | 'destaque';
+  alinhamento?: 'esquerda' | 'centro';
+  class?: string;
+}
+
+const { id, titulo, subtitulo, eyebrow, tom = 'padrao', alinhamento = 'esquerda', class: className = '' } = Astro.props;
+
+// data-tom liga os tokens do tom (global.css). padrao e elevado usam a base clara; escuro redefine os tokens.
+const tomClasses = {
+  padrao: 'bg-canvas text-ink',
+  elevado: 'bg-surface text-ink',
+  escuro: 'bg-canvas text-ink',
+  destaque: 'bg-accent text-on-accent',
+};
+const tituloClasses = tom === 'destaque' ? 'text-on-accent' : '';
+const eyebrowClasses = tom === 'destaque' ? 'text-on-accent' : 'text-accent-text';
+const subtituloClasses = tom === 'destaque' ? 'text-on-accent' : 'text-ink-muted';
+const centro = alinhamento === 'centro';
+---
+
+<section
+  id={id}
+  data-tom={tom}
+  class:list={['py-secao lg:py-secao-lg', tomClasses[tom], centro && 'text-center', className]}
+  aria-labelledby={titulo && id ? `${id}-titulo` : undefined}
+>
+  <Container>
+    {eyebrow && <p class:list={['text-sm font-semibold tracking-wide uppercase', eyebrowClasses]}>{eyebrow}</p>}
+    {
+      titulo && (
+        <h2
+          id={id ? `${id}-titulo` : undefined}
+          class:list={['mt-2 text-titulo', tituloClasses, centro && 'mx-auto max-w-3xl']}
+        >
+          {titulo}
+        </h2>
+      )
+    }
+    {
+      subtitulo && (
+        <p class:list={['mt-4 text-lg', subtituloClasses, centro && 'mx-auto max-w-2xl']}>{subtitulo}</p>
+      )
+    }
+    <div class:list={[titulo || eyebrow || subtitulo ? 'mt-8' : '']}>
+      <slot />
+    </div>
+  </Container>
+</section>

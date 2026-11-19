@@ -1,0 +1,95 @@
+---
+import Container from '../ui/Container.astro';
+import Button from '../ui/Button.astro';
+import MobileNav from './MobileNav.astro';
+import { navItems } from '../../lib/navigation';
+
+interface Props {
+  // Sobre um hero de imagem: fica fixo, transparente no topo e ganha fundo ao rolar.
+  transparente?: boolean;
+}
+
+const { transparente = false } = Astro.props;
+
+// "Membros" e "Ofertar" saem da lista e viram ações ao lado direito do cabeçalho.
+const links = navItems.filter((item) => item.href !== '/membros' && item.href !== '/doar');
+const membros = navItems.find((item) => item.href === '/membros');
+const ofertar = navItems.find((item) => item.href === '/doar');
+---
+
+<!--
+  transparente: cabeçalho fixo sobre o hero. O padrão (sem JS) é o fundo sólido; o script
+  data-script="header-scroll" liga o estado data-topo, que deixa tudo transparente e branco.
+-->
+<header
+  data-header
+  data-transparente={transparente ? '' : undefined}
+  class:list={[
+    'top-0 z-40 w-full',
+    transparente ? 'fixed inset-x-0 bg-canvas/95 backdrop-blur' : 'sticky bg-canvas/95 backdrop-blur',
+  ]}
+>
+  <Container class="flex h-16 items-center justify-between gap-4">
+    <a href="/" class="logo-pomba inline-flex rounded-md" aria-label="Igreja dos Vales, página inicial">
+      <span
+        aria-hidden="true"
+        class="logo-pomba-icone block h-8 w-[2.7826rem] transition-colors duration-200"
+      />
+    </a>
+
+    <nav aria-label="Principal" class="hidden lg:block">
+      <ul class="flex items-center gap-6">
+        {
+          links.map((item) => (
+            <li>
+              <a href={item.href} class="rounded-md text-ink no-underline hover:text-accent-text hover:underline">
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      {
+        ofertar && (
+          <Button href={ofertar.href} variante="secundario" class="hidden px-5 py-2 lg:inline-flex">
+            {ofertar.label}
+          </Button>
+        )
+      }
+      {
+        membros && (
+          <Button href={membros.href} variante="primario" class="hidden px-5 py-2 lg:inline-flex">
+            Área de membros
+          </Button>
+        )
+      }
+      <MobileNav />
+    </div>
+  </Container>
+</header>
+
+<!--
+  Melhoria progressiva: sem este script o cabeçalho continua sólido. Com ele, o estado data-topo
+  só vale no alto da página e com o menu mobile fechado (o menu precisa do fundo claro).
+-->
+<script is:inline data-script="header-scroll">
+  (() => {
+    const cabecalho = document.querySelector('header[data-transparente]');
+    if (!cabecalho) return;
+
+    const menu = cabecalho.querySelector('details');
+    const LIMITE = 8;
+
+    const atualizar = () => {
+      const noTopo = window.scrollY <= LIMITE && !(menu && menu.open);
+      cabecalho.toggleAttribute('data-topo', noTopo);
+    };
+
+    atualizar();
+    window.addEventListener('scroll', atualizar, { passive: true });
+    if (menu) menu.addEventListener('toggle', atualizar);
+  })();
+</script>

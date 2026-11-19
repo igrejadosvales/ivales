@@ -1,0 +1,19 @@
+---
+// Selo curto (dia, categoria, "a confirmar") com as classes CSS da HeroUI (chip), sem JavaScript.
+// neutro: texto ink sobre surface. azul: texto branco sobre o azul. Os dois pares estão em tokens.test.ts.
+interface Props {
+  variante?: 'neutro' | 'azul';
+  class?: string;
+}
+
+const { variante = 'neutro', class: className = '' } = Astro.props;
+
+const variantes = {
+  neutro: 'chip--secondary chip--default bg-surface text-ink',
+  azul: 'chip--primary chip--accent bg-accent text-on-accent',
+};
+---
+
+<span class:list={['chip chip--lg font-semibold', variantes[variante], className]}>
+  <span class="chip__label"><slot /></span>
+</span>

@@ -1,0 +1,35 @@
+---
+// Cartão com foto no topo, usado nos caminhos de envolvimento. Imagem local, sem terceiros.
+interface Props {
+  titulo: string;
+  href: string;
+  imagem: { src: string; srcset?: string; alt: string; width: number; height: number };
+}
+
+const { titulo, href, imagem } = Astro.props;
+---
+
+<article class="group relative flex h-full min-h-[390px] flex-col overflow-hidden rounded-cartao bg-[#1a1a1a] text-left text-white shadow-lg shadow-black/10 transition-transform duration-300 hover:-translate-y-1 motion-reduce:transition-none">
+  <img
+    src={imagem.src}
+    srcset={imagem.srcset}
+    sizes="(min-width: 1024px) 33vw, 100vw"
+    alt={imagem.alt}
+    width={imagem.width}
+    height={imagem.height}
+    loading="lazy"
+    decoding="async"
+    class="absolute inset-0 h-full w-full object-cover object-[center_32%] transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+  />
+  <div class="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/75 to-transparent" aria-hidden="true"></div>
+  <div class="relative z-10 mt-auto flex flex-1 flex-col justify-end px-6 pb-6 pt-40">
+    <h3 class="text-xl leading-tight font-bold text-white">{titulo}</h3>
+    <p class="mt-2 text-sm leading-5 text-white/80"><slot /></p>
+    <a
+      href={href}
+      class="mt-5 inline-flex items-center gap-1 self-start rounded-xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      Saiba mais
+    </a>
+  </div>
+</article>

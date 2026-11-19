@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Container from '../components/ui/Container.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+---
+
+<BaseLayout
+  title="Ofertar"
+  description="Contribua com a missão da Igreja dos Vales e ajude a transformar vidas."
+>
+  <section class="bg-canvas py-secao lg:py-secao-lg">
+    <Container>
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-semibold tracking-wide text-accent-text uppercase">Generosidade</p>
+        <h1 class="mt-4 text-hero text-ink">Ofertar é participar da missão</h1>
+        <p class="mx-auto mt-6 max-w-2xl text-lg text-ink-muted">
+          Sua contribuição ajuda a Igreja dos Vales a cuidar de pessoas, servir a comunidade e levar o evangelho mais longe.
+        </p>
+      </div>
+    </Container>
+  </section>
+
+  <Section
+    id="formas-de-ofertar"
+    titulo="Como você pode ofertar?"
+    subtitulo="Escolha a melhor forma de contribuir."
+    tom="destaque"
+  >
+    <div class="grid gap-6 md:grid-cols-3">
+      <Card titulo="Durante o culto" class="border-white/20 bg-white hover:border-white">
+        <p>Você pode entregar sua oferta presencialmente durante uma de nossas celebrações.</p>
+      </Card>
+      <Card titulo="PIX" class="border-white/20 bg-white hover:border-white">
+        <p>Em breve disponibilizaremos os dados para você contribuir de forma rápida e segura.</p>
+      </Card>
+      <Card titulo="Fale com a igreja" class="border-white/20 bg-white hover:border-white">
+        <p>Entre em contato para tirar dúvidas sobre outras formas de contribuição.</p>
+      </Card>
+    </div>
+  </Section>
+
+  <Section tom="escuro">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-titulo text-ink">Obrigado por fazer parte</h2>
+      <p class="mt-4 text-lg text-ink-muted">
+        Cada oferta é uma expressão de fé e generosidade. Juntos, podemos continuar servindo e alcançando vidas.
+      </p>
+      <div class="mt-8 flex justify-center">
+        <Button href="/contato" variante="secundario">Fale com a gente</Button>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>

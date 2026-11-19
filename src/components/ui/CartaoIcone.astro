@@ -1,0 +1,17 @@
+---
+// Cartão de lista com ícone (SVG no slot "icone"), título e texto. Sem ação própria.
+interface Props {
+  titulo: string;
+  class?: string;
+}
+
+const { titulo, class: className = '' } = Astro.props;
+---
+
+<article class:list={['flex h-full flex-col rounded-cartao border border-border bg-canvas p-6', className]}>
+  <span class="flex justify-center text-accent-text">
+    <slot name="icone" />
+  </span>
+  <h3 class="mt-4 text-lg leading-tight font-semibold text-ink">{titulo}</h3>
+  <p class="mt-2 text-sm leading-relaxed text-ink-muted"><slot /></p>
+</article>

@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroImersivo from '../components/ui/HeroImersivo.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+
+// Estrutura inspirada na página "Sobre" da Igreja da Cidade SJC, adaptada ao design system da iVales.
+// Conteúdo próprio da iVales ainda não confirmado: textos marcados com "[a confirmar]".
+const identidade = [
+  { titulo: 'Nossa Visão', texto: '[a confirmar]' },
+  { titulo: 'Nossa Missão', texto: '[a confirmar]' },
+  { titulo: 'Nossos Valores', texto: '[a confirmar]' },
+  { titulo: 'Nossos Propósitos', texto: 'Missões, Adoração, Comunhão, Serviço e Discipulado. [a confirmar]' },
+];
+
+---
+
+<BaseLayout
+  title="Sobre"
+  description="Conheça a Igreja dos Vales: nossa história, visão, missão, valores e propósitos."
+  headerTransparente
+>
+  <HeroImersivo
+    eyebrow="Bem-vindo"
+    titulo="Nós somos a Igreja dos Vales!"
+    texto="Uma família para você pertencer. Conheça nossa história, nossos valores e o que cremos."
+    alinhamento="centro"
+    imagem={{
+      src: '/images/sobre-hero.png',
+      alt: 'Duas pessoas apresentando uma programação durante um encontro da Igreja dos Vales',
+      width: 1672,
+      height: 941,
+    }}
+  >
+    <Button href="#historia">Conheça nossa história</Button>
+  </HeroImersivo>
+
+  <Section tom="escuro" class="bg-black">
+    <p class="max-w-4xl text-titulo leading-tight font-medium text-ink">
+      Somos uma igreja família: um lugar para pertencer, crescer em Cristo e servir. Por meio dos cultos, iGrupos e
+      ministérios, você tem um lugar aqui.
+    </p>
+  </Section>
+
+  <Section id="identidade" titulo="Quem somos" eyebrow="Nossa identidade" alinhamento="centro">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {identidade.map((item) => (
+        <Card titulo={item.titulo} class="border-0 bg-transparent p-0 hover:border-0">
+          {item.texto}
+        </Card>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="historia" titulo="Nossa História" eyebrow="Como começamos e onde estamos hoje" tom="elevado">
+    <div class="max-w-prose text-lg">
+      <p>
+        A Igreja dos Vales nasceu em [a confirmar — ano e cidade]. [a confirmar — contar a trajetória da igreja: nomes,
+        endereços e marcos até hoje.]
+      </p>
+      <p class="mt-4">
+        Hoje, estamos presentes em [a confirmar — cidades e campi]. [a confirmar — o que vem pela frente: expansão,
+        novos pontos de partida e planos.]
+      </p>
+    </div>
+  </Section>
+
+  <Section id="envolva-se" titulo="Vem fazer parte da família!" tom="destaque">
+    <p class="max-w-prose text-lg">Veja como Deus pode usar seus dons para um impacto eterno!</p>
+    <div class="mt-8 flex flex-wrap gap-4">
+      <Button href="/voluntariado" variante="primario">Seja um voluntário</Button>
+      <Button href="/contato" variante="secundario">Fale com a gente</Button>
+    </div>
+  </Section>
+</BaseLayout>

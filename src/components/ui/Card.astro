@@ -1,0 +1,32 @@
+---
+// Cartão com as classes CSS da HeroUI (card, card__title, card__content), sem JavaScript.
+interface Props {
+  titulo: string;
+  href?: string;
+  class?: string;
+}
+
+const { titulo, href, class: className = '' } = Astro.props;
+---
+
+<article
+  class:list={[
+    'card card--default h-full gap-0 rounded-cartao border border-border bg-canvas p-6 shadow-none transition-colors hover:border-border-strong',
+    className,
+  ]}
+>
+  <h3 class="card__title text-xl leading-tight font-bold text-ink">
+    {
+      href ? (
+        <a href={href} class="text-ink no-underline after:absolute after:inset-0 after:rounded-cartao focus-visible:outline-focus">
+          {titulo}
+        </a>
+      ) : (
+        titulo
+      )
+    }
+  </h3>
+  <div class="card__content mt-3 text-ink-muted">
+    <slot />
+  </div>
+</article>

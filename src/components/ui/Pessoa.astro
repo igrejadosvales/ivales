@@ -1,0 +1,36 @@
+---
+// Cartão de pessoa (foto, nome e função), sem JavaScript. Mesmo estilo do Card:
+// fundo canvas, borda border, rounded-cartao e hover em border-strong.
+// Sem foto, usa o placeholder local /placeholders/pessoa.svg.
+interface Props {
+  nome: string;
+  cargo: string;
+  foto?: { src: string; alt: string; width: number; height: number };
+  class?: string;
+}
+
+const { nome, cargo, foto, class: className = '' } = Astro.props;
+
+const imagem = foto ?? { src: '/placeholders/pessoa.svg', alt: 'Foto em breve', width: 400, height: 400 };
+---
+
+<article
+  class:list={[
+    'card card--default h-full gap-0 overflow-hidden rounded-cartao border border-border bg-canvas p-0 shadow-none transition-colors hover:border-border-strong',
+    className,
+  ]}
+>
+  <img
+    src={imagem.src}
+    alt={imagem.alt}
+    width={imagem.width}
+    height={imagem.height}
+    loading="lazy"
+    decoding="async"
+    class="aspect-square w-full border-b border-border object-cover"
+  />
+  <div class="p-6">
+    <h3 class="card__title text-xl leading-tight font-bold text-ink">{nome}</h3>
+    <p class="card__content mt-2 text-ink-muted">{cargo}</p>
+  </div>
+</article>

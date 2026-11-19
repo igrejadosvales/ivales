@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Foto em breve">
+  <rect width="400" height="400" fill="#f1eee8"/>
+  <circle cx="200" cy="150" r="72" fill="#dcd7cc"/>
+  <path d="M52 400 C52 302 128 258 200 258 C272 258 348 302 348 400 Z" fill="#dcd7cc"/>
+</svg>

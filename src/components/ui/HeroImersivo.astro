@@ -1,0 +1,44 @@
+---
+// Hero de imagem cheia, com o texto sobre um gradiente escuro no rodapé da foto.
+// Usa o tom escuro ([data-tom="escuro"]) para herdar texto branco, foco branco e botões do tema.
+// A entrada (foto abrindo, texto em cascata) está no global.css e respeita prefers-reduced-motion.
+import Container from './Container.astro';
+
+interface Props {
+  titulo: string;
+  eyebrow?: string;
+  texto?: string;
+  alinhamento?: 'esquerda' | 'centro';
+  imagem: { src: string; srcset?: string; alt: string; width: number; height: number };
+}
+
+const { titulo, eyebrow, texto, alinhamento = 'esquerda', imagem } = Astro.props;
+const centro = alinhamento === 'centro';
+---
+
+<section data-tom="escuro" class="relative isolate flex min-h-svh items-end overflow-hidden bg-canvas text-ink">
+  <img
+    src={imagem.src}
+    srcset={imagem.srcset}
+    sizes="100vw"
+    alt={imagem.alt}
+    width={imagem.width}
+    height={imagem.height}
+    fetchpriority="high"
+    decoding="async"
+    class="hero-imagem absolute inset-0 h-full w-full object-cover"
+  />
+  <!-- O gradiente garante o contraste do texto sobre qualquer área clara da foto. -->
+  <div class="absolute inset-0 bg-linear-to-t from-black via-black/60 to-black/10" aria-hidden="true"></div>
+
+  <Container class="relative z-10 py-12 lg:py-20">
+    <div class:list={['max-w-2xl', centro && 'mx-auto max-w-3xl text-center']}>
+      {eyebrow && <p class="hero-entrada hero-entrada-1 text-sm font-semibold tracking-wide text-accent-text uppercase">{eyebrow}</p>}
+      <h1 class="hero-entrada hero-entrada-2 mt-3 text-hero text-ink">{titulo}</h1>
+      {texto && <p class="hero-entrada hero-entrada-3 mt-4 text-lg text-ink-muted lg:text-xl">{texto}</p>}
+      <div class:list={['hero-entrada hero-entrada-4 mt-8 flex flex-wrap gap-3', centro && 'justify-center']}>
+        <slot />
+      </div>
+    </div>
+  </Container>
+</section>

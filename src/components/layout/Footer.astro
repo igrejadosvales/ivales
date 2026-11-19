@@ -1,0 +1,84 @@
+---
+import Container from '../ui/Container.astro';
+import { navItems } from '../../lib/navigation';
+
+const ano = new Date().getFullYear();
+const linksRapidos = [{ label: 'Início', href: '/' }, ...navItems];
+---
+
+<!-- Rodapé escuro: colunas de navegação e uma base institucional separada. -->
+<footer data-tom="escuro" class="bg-canvas text-ink">
+  <Container>
+    <div class="grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_1.2fr] lg:gap-12">
+      <div>
+        <a href="/" class="logo-pomba inline-flex rounded-md" aria-label="Igreja dos Vales, página inicial">
+          <span aria-hidden="true" class="logo-pomba-icone block h-10 w-[3.4783rem] transition-colors duration-200" />
+        </a>
+        <p class="mt-5 max-w-xs text-sm leading-6 text-ink-muted">
+          Um lugar de fé, esperança e amor. Junte-se a nós para adorar, crescer e servir.
+        </p>
+        <div class="mt-6 flex items-center gap-3">
+          <a
+            href="https://www.youtube.com/@ivalesonline"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink transition-colors hover:border-border-strong"
+            aria-label="Canal da Igreja dos Vales no YouTube"
+          >
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+            </svg>
+          </a>
+          <a
+            href="https://www.instagram.com/ivalesonline/"
+            class="text-sm font-semibold text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+          >
+            Instagram @ivalesonline
+          </a>
+        </div>
+      </div>
+
+      <nav aria-label="Rodapé: navegação">
+        <h2 class="text-sm font-semibold text-ink">Navegue</h2>
+        <ul class="mt-5 grid gap-2.5 text-sm">
+          {linksRapidos.map((item) => (
+            <li><a href={item.href} class="rounded-md text-ink-muted underline-offset-4 hover:text-ink hover:underline">{item.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <div>
+        <h2 class="text-sm font-semibold text-ink">Comunidade</h2>
+        <ul class="mt-5 grid gap-2.5 text-sm text-ink-muted">
+          <li><a href="/membros" class="rounded-md hover:text-ink hover:underline">Área de membros</a></li>
+          <li><a href="/ministerios" class="rounded-md hover:text-ink hover:underline">Ministérios</a></li>
+          <li><a href="/voluntariado" class="rounded-md hover:text-ink hover:underline">Seja voluntário</a></li>
+          <li><a href="/ofertar" class="rounded-md hover:text-ink hover:underline">Ofertar</a></li>
+          <li><a href="/contato" class="rounded-md hover:text-ink hover:underline">Fale conosco</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-semibold text-ink">Cultos e contato</h2>
+        <ul class="mt-5 grid gap-2.5 text-sm text-ink-muted">
+          <li>Domingo: 10h, 17h e 20h</li>
+          <li>Porto Alegre: 19h</li>
+          <li class="pt-2">Rua Santa Clara, 192 - Gravataí</li>
+          <li><a href="tel:+5511999999999" class="rounded-md hover:text-ink hover:underline">(11) 99999-9999</a></li>
+          <li><a href="mailto:contato@igrejadosvales.com" class="rounded-md break-all hover:text-ink hover:underline">contato@igrejadosvales.com</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-5 border-t border-border py-7 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between">
+      <a href="/" class="inline-flex items-center gap-2 font-semibold text-ink" aria-label="Igreja dos Vales, página inicial">
+        <span aria-hidden="true" class="logo-pomba-icone block h-5 w-5" />
+        Igreja dos Vales
+      </a>
+      <nav aria-label="Rodapé: informações legais" class="flex flex-wrap gap-x-5 gap-y-2">
+        <a href="/contato" class="hover:text-ink hover:underline">Contato</a>
+        <a href="/sobre" class="hover:text-ink hover:underline">Sobre nós</a>
+        <a href="/" class="hover:text-ink hover:underline">Mapa do site</a>
+      </nav>
+      <p>© {ano} Igreja dos Vales. Todos os direitos reservados.</p>
+    </div>
+  </Container>
+</footer>
