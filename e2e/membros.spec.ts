@@ -19,7 +19,7 @@ test.describe('Área de Membros', () => {
   test('/membros/demo: painel com dados fictícios, sem família, e saída para o login', async ({ page }) => {
     await page.goto('/membros/demo');
     await expect(page.getByText('Modo demonstração.')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Olá, Mateus' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Olá, Juliana' })).toBeVisible();
     await semViolacoesGraves(page);
 
     await page.getByRole('tab', { name: 'Meus dados' }).click();

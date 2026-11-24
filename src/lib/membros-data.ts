@@ -225,8 +225,8 @@ export const MINISTERIOS_VOLUNTARIADO: MinisterioVoluntario[] = [
 ];
 
 export const PERFIL_DEMONSTRACAO: PerfilMembro = {
-  nome: 'Mateus Oliveira',
-  email: 'mateus.oliveira@exemplo.com.br',
+  nome: 'Juliana Oliveira',
+  email: 'juliana.oliveira@exemplo.com.br',
   telefone: '(51) 99812-3456',
   bairro: 'Centro',
   campus: 'Gravataí',
@@ -238,13 +238,13 @@ export const PERFIL_DEMONSTRACAO: PerfilMembro = {
   familia: [
     {
       id: 'fam-1',
-      nome: 'Juliana Oliveira',
+      nome: 'Mateus Oliveira',
       parentesco: 'Cônjuge',
       faixaEtaria: 'Adulto',
     },
     {
       id: 'fam-2',
-      nome: 'Pedro Oliveira',
+      nome: 'Maria Oliveira',
       parentesco: 'Filho(a)',
       faixaEtaria: 'Vales Kids (6–8 anos)',
     },

@@ -637,7 +637,7 @@ export default function PortalMembros({ demo = false }: Props) {
           {/* ABA 2: JORNADA IDEALL (REDE DE CURSOS) */}
           {abaAtiva === 'ideall' && (
             <div id="painel-ideall" role="tabpanel" aria-labelledby="tab-ideall" className="space-y-6">
-              <div className="rounded-cartao bg-surface p-6 sm:p-8">
+              <div className="rounded-cartao bg-canvas p-6 sm:p-8">
                 <p className="text-sm font-medium text-ink-muted">Rede de cursos</p>
                 <h3 className="mt-1 text-2xl font-bold text-ink">Jornada IdeAll</h3>
                 <p className="mt-2 max-w-prose text-ink-muted">
@@ -650,8 +650,8 @@ export default function PortalMembros({ demo = false }: Props) {
                     return (
                       <article
                         key={curso.id}
-                        className={`rounded-cartao bg-canvas p-6 transition-colors ${
-                          curso.inscrito ? 'ring-2 ring-accent' : ''
+                        className={`rounded-cartao p-6 transition-colors ${
+                          curso.inscrito ? 'bg-surface' : 'bg-canvas'
                         }`}
                       >
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -717,7 +717,7 @@ export default function PortalMembros({ demo = false }: Props) {
                                     type="button"
                                     onClick={() => alternarAula(curso.id, aula.id)}
                                     aria-pressed={aula.concluida}
-                                    className="flex w-full items-center gap-3 rounded-xl bg-surface px-4 py-3 text-left hover:bg-surface/70"
+                                    className="flex w-full items-center gap-3 rounded-xl bg-canvas px-4 py-3 text-left hover:bg-surface"
                                   >
                                     <span
                                       aria-hidden="true"
@@ -752,7 +752,7 @@ export default function PortalMembros({ demo = false }: Props) {
           {abaAtiva === 'igrupo' && (
             <div id="painel-igrupo" role="tabpanel" aria-labelledby="tab-igrupo" className="space-y-8">
               {/* Grupo Atual */}
-              <div className="rounded-cartao bg-surface p-6 sm:p-8">
+              <div className="rounded-cartao bg-canvas p-6 sm:p-8">
                 <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
                   <div>
                     <span className="chip chip--lg chip--primary chip--accent bg-accent font-semibold text-on-accent">
@@ -786,7 +786,7 @@ export default function PortalMembros({ demo = false }: Props) {
               </div>
 
               {/* Explorar outros iGrupos */}
-              <div className="rounded-cartao bg-surface p-6 sm:p-8">
+              <div className="rounded-cartao bg-canvas p-6 sm:p-8">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                   <div>
                     <h3 className="text-xl font-bold text-ink">Conhecer outros iGrupos</h3>
@@ -820,8 +820,8 @@ export default function PortalMembros({ demo = false }: Props) {
                     return (
                       <article
                         key={grupo.id}
-                        className={`flex flex-col justify-between rounded-xl bg-canvas p-5 ${
-                          ehAtual ? 'ring-2 ring-accent' : ''
+                        className={`flex flex-col justify-between rounded-xl p-5 ${
+                          ehAtual ? 'bg-surface' : 'bg-canvas'
                         }`}
                       >
                         <div>
@@ -864,7 +864,7 @@ export default function PortalMembros({ demo = false }: Props) {
           {abaAtiva === 'escalas' && (
             <div id="painel-escalas" role="tabpanel" aria-labelledby="tab-escalas" className="space-y-8">
               {/* Escalas do Membro */}
-              <div className="rounded-cartao bg-surface p-6 sm:p-8">
+              <div className="rounded-cartao bg-canvas p-6 sm:p-8">
                 <p className="text-sm font-medium text-ink-muted">Servir na Casa</p>
                 <h3 className="mt-1 text-2xl font-bold text-ink">Minhas Próximas Escalas</h3>
                 <p className="mt-2 text-ink-muted">
@@ -875,7 +875,7 @@ export default function PortalMembros({ demo = false }: Props) {
                   {escalas.map((escala) => (
                     <article
                       key={escala.id}
-                      className="flex flex-col justify-between gap-4 rounded-xl bg-canvas p-5 sm:flex-row sm:items-center"
+                      className="flex flex-col justify-between gap-4 rounded-xl bg-surface p-5 sm:flex-row sm:items-center"
                     >
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -933,7 +933,7 @@ export default function PortalMembros({ demo = false }: Props) {
               </div>
 
               {/* Equipes e Ministérios */}
-              <div className="rounded-cartao bg-surface p-6 sm:p-8">
+              <div className="rounded-cartao bg-canvas p-6 sm:p-8">
                 <h3 className="text-xl font-bold text-ink">Equipes de Voluntariado</h3>
                 <p className="mt-1 text-sm text-ink-muted">
                   Escolha onde você deseja servir ou manifeste interesse para participar do próximo treinamento.
@@ -943,8 +943,8 @@ export default function PortalMembros({ demo = false }: Props) {
                   {ministerios.map((min) => (
                     <article
                       key={min.id}
-                      className={`flex flex-col justify-between rounded-xl bg-canvas p-5 ${
-                        min.inscrito ? 'ring-2 ring-accent' : ''
+                      className={`flex flex-col justify-between rounded-xl p-5 ${
+                        min.inscrito ? 'bg-surface' : 'bg-canvas'
                       }`}
                     >
                       <div>
@@ -981,14 +981,14 @@ export default function PortalMembros({ demo = false }: Props) {
             <div id="painel-dados" role="tabpanel" aria-labelledby="tab-dados" className="space-y-8">
               <div className="grid gap-8 lg:grid-cols-12">
                 {/* Dados Cadastrais */}
-                <div className="rounded-cartao bg-surface p-6 sm:p-8 lg:col-span-8">
+                <div className="rounded-cartao bg-canvas p-6 sm:p-8 lg:col-span-8">
                   <h3 className="text-2xl font-bold text-ink">Meus Dados de Membro</h3>
                   <p className="mt-1 text-sm text-ink-muted">
                     Mantenha seu contato e endereço atualizados para o cuidado pastoral e comunicação do seu iGrupo.
                   </p>
 
                   {perfilSalvoMsg && (
-                    <div role="status" className="mt-4 rounded-xl bg-canvas p-4 text-sm font-semibold text-ink">
+                    <div role="status" className="mt-4 rounded-xl bg-surface p-4 text-sm font-semibold text-ink">
                       Seus dados cadastrais foram atualizados com sucesso.
                     </div>
                   )}
