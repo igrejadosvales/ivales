@@ -38,13 +38,10 @@ test.describe('Área de Membros (/membros)', () => {
     await page.getByRole('tab', { name: 'Minhas Escalas' }).click();
     await expect(page.getByRole('heading', { name: 'Minhas Próximas Escalas' })).toBeVisible();
 
-    // Vai para a aba Família, inscreve-se no batismo e adiciona um familiar
-    await page.getByRole('tab', { name: 'Família' }).click();
-    await page.getByRole('button', { name: 'Quero me batizar' }).click();
-    await expect(page.getByText('Inscrição para o Batismo registrada com alegria!')).toBeVisible();
-    await page.getByLabel('Nome do familiar').fill('Sofia Oliveira');
-    await page.getByRole('button', { name: '+ Adicionar à família' }).click();
-    await expect(page.getByText('Sofia Oliveira')).toBeVisible();
+    // Vai para a aba Meus dados (sem a parte de família)
+    await page.getByRole('tab', { name: 'Meus dados' }).click();
+    await expect(page.getByRole('heading', { name: 'Meus Dados de Membro' })).toBeVisible();
+    await expect(page.getByText('Minha Família')).toHaveCount(0);
 
     // Sai da conta e volta para a tela de acesso
     await page.getByRole('button', { name: 'Sair da conta' }).click();

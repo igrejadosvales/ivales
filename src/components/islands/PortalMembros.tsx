@@ -8,13 +8,12 @@ import {
   PERFIL_DEMONSTRACAO,
   type CursoIdeAll,
   type EscalaVoluntario,
-  type MembroFamilia,
   type MinisterioVoluntario,
   type PerfilMembro,
   progressoCurso,
 } from '../../lib/membros-data';
 
-type AbaPortal = 'inicio' | 'ideall' | 'igrupo' | 'escalas' | 'familia';
+type AbaPortal = 'inicio' | 'ideall' | 'igrupo' | 'escalas' | 'dados';
 type ModoAcesso = 'login' | 'cadastro';
 
 const ABAS: { id: AbaPortal; rotulo: string; indisponivel?: boolean }[] = [
@@ -22,7 +21,7 @@ const ABAS: { id: AbaPortal; rotulo: string; indisponivel?: boolean }[] = [
   { id: 'ideall', rotulo: 'Jornada IdeAll', indisponivel: true },
   { id: 'igrupo', rotulo: 'Meu iGrupo', indisponivel: true },
   { id: 'escalas', rotulo: 'Minhas Escalas', indisponivel: true },
-  { id: 'familia', rotulo: 'Família' },
+  { id: 'dados', rotulo: 'Meus dados' },
 ];
 
 export default function PortalMembros() {
@@ -51,11 +50,8 @@ export default function PortalMembros() {
   const [escalas, setEscalas] = useState<EscalaVoluntario[]>(ESCALAS_INICIAIS);
   const [ministerios, setMinisterios] = useState<MinisterioVoluntario[]>(MINISTERIOS_VOLUNTARIADO);
 
-  // Família: dados cadastrais e familiares
+  // Meus dados: dados cadastrais
   const [perfilSalvoMsg, setPerfilSalvoMsg] = useState(false);
-  const [novoFamiliarNome, setNovoFamiliarNome] = useState('');
-  const [novoFamiliarParentesco, setNovoFamiliarParentesco] = useState<MembroFamilia['parentesco']>('Filho(a)');
-  const [novoFamiliarFaixa, setNovoFamiliarFaixa] = useState('Vales Kids (6–8 anos)');
 
   const grupoAtual = GRUPOS_DISPONIVEIS.find((g) => g.id === grupoAtualId) ?? GRUPOS_DISPONIVEIS[0]!;
   const proximaEscala = escalas[0];
@@ -136,29 +132,6 @@ export default function PortalMembros() {
     e.preventDefault();
     setPerfilSalvoMsg(true);
     setTimeout(() => setPerfilSalvoMsg(false), 4000);
-  }
-
-  function adicionarFamiliar(e: SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!novoFamiliarNome.trim()) return;
-    const novo: MembroFamilia = {
-      id: `fam-${Date.now()}`,
-      nome: novoFamiliarNome.trim(),
-      parentesco: novoFamiliarParentesco,
-      faixaEtaria: novoFamiliarFaixa,
-    };
-    setPerfil((atual) => ({
-      ...atual,
-      familia: [...atual.familia, novo],
-    }));
-    setNovoFamiliarNome('');
-  }
-
-  function removerFamiliar(id: string) {
-    setPerfil((atual) => ({
-      ...atual,
-      familia: atual.familia.filter((f) => f.id !== id),
-    }));
   }
 
   const gruposFiltrados =
@@ -538,7 +511,7 @@ export default function PortalMembros() {
               </div>
 
               {/* Cartões de Resumo Rápido */}
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2">
                 {/* Meu iGrupo */}
                 <article className="flex flex-col justify-between rounded-cartao border border-border bg-canvas p-6">
                   <div>
@@ -574,36 +547,6 @@ export default function PortalMembros() {
                     </div>
                   </article>
                 )}
-
-                {/* Família e Cuidado */}
-                <article className="flex flex-col justify-between rounded-cartao border border-border bg-canvas p-6">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-bold tracking-wide text-accent-text uppercase">Minha Família</p>
-                      <span className="chip chip--lg chip--secondary chip--default bg-surface font-semibold text-ink">
-                        <span className="chip__label">{perfil.familia.length + 1} pessoas</span>
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-xl font-bold text-ink">Cadastro Familiar</h3>
-                    <ul className="mt-2 space-y-1 text-sm text-ink-muted">
-                      <li>• {perfil.nome} (Titular)</li>
-                      {perfil.familia.map((f) => (
-                        <li key={f.id}>
-                          • {f.nome} ({f.parentesco})
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="mt-6 border-t border-border pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setAbaAtiva('familia')}
-                      className="text-sm font-bold text-accent-text underline-offset-4 hover:underline"
-                    >
-                      Atualizar dados e família →
-                    </button>
-                  </div>
-                </article>
               </div>
             </div>
           )}
@@ -950,12 +893,12 @@ export default function PortalMembros() {
             </div>
           )}
 
-          {/* ABA 5: FAMÍLIA */}
-          {abaAtiva === 'familia' && (
-            <div id="painel-familia" role="tabpanel" aria-labelledby="tab-familia" className="space-y-8">
+          {/* ABA 5: MEUS DADOS */}
+          {abaAtiva === 'dados' && (
+            <div id="painel-dados" role="tabpanel" aria-labelledby="tab-dados" className="space-y-8">
               <div className="grid gap-8 lg:grid-cols-12">
                 {/* Dados Cadastrais */}
-                <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8 lg:col-span-7">
+                <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8 lg:col-span-8">
                   <h3 className="text-2xl font-bold text-ink">Meus Dados de Membro</h3>
                   <p className="mt-1 text-sm text-ink-muted">
                     Mantenha seu contato e endereço atualizados para o cuidado pastoral e comunicação do seu iGrupo.
@@ -1030,97 +973,6 @@ export default function PortalMembros() {
                         Salvar alterações
                       </button>
                     </div>
-                  </form>
-                </div>
-
-                {/* Núcleo Familiar (Cônjuge e Filhos para o Vales Kids) */}
-                <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8 lg:col-span-5">
-                  <h3 className="text-2xl font-bold text-ink">Minha Família</h3>
-                  <p className="mt-1 text-sm text-ink-muted">
-                    Cadastre seu cônjuge e filhos para agilizar o check-in no ministério infantil (Vales Kids).
-                  </p>
-
-                  <ul className="mt-6 divide-y divide-border rounded-xl border border-border bg-surface">
-                    {perfil.familia.map((familiar) => (
-                      <li key={familiar.id} className="flex items-center justify-between gap-3 p-4">
-                        <div>
-                          <p className="font-bold text-ink">{familiar.nome}</p>
-                          <p className="text-xs text-ink-muted">
-                            {familiar.parentesco} • {familiar.faixaEtaria}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removerFamiliar(familiar.id)}
-                          className="text-xs font-bold text-ink underline-offset-4 hover:text-accent-text hover:underline"
-                          aria-label={`Remover ${familiar.nome} da família`}
-                        >
-                          Remover
-                        </button>
-                      </li>
-                    ))}
-                    {perfil.familia.length === 0 && (
-                      <li className="p-4 text-sm text-ink-muted">Nenhum familiar adicionado ainda.</li>
-                    )}
-                  </ul>
-
-                  <form onSubmit={adicionarFamiliar} className="mt-6 space-y-4 border-t border-border pt-6">
-                    <h4 className="text-base font-bold text-ink">Adicionar familiar</h4>
-                    <div>
-                      <label htmlFor="familiar-nome" className="block text-sm font-semibold text-ink">
-                        Nome do familiar
-                      </label>
-                      <input
-                        id="familiar-nome"
-                        type="text"
-                        value={novoFamiliarNome}
-                        onChange={(e) => setNovoFamiliarNome(e.target.value)}
-                        placeholder="Ex.: Lucas Oliveira"
-                        className="mt-1.5 min-h-11 w-full rounded-xl border border-border-strong bg-canvas px-4 py-2 text-sm text-ink placeholder:text-ink-muted"
-                      />
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label htmlFor="familiar-parentesco" className="block text-sm font-semibold text-ink">
-                          Parentesco
-                        </label>
-                        <select
-                          id="familiar-parentesco"
-                          value={novoFamiliarParentesco}
-                          onChange={(e) => setNovoFamiliarParentesco(e.target.value as MembroFamilia['parentesco'])}
-                          className="mt-1.5 min-h-11 w-full rounded-xl border border-border-strong bg-canvas px-3 py-2 text-sm text-ink"
-                        >
-                          <option value="Cônjuge">Cônjuge</option>
-                          <option value="Filho(a)">Filho(a)</option>
-                          <option value="Outro">Outro</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="familiar-faixa" className="block text-sm font-semibold text-ink">
-                          Faixa etária / Turma
-                        </label>
-                        <select
-                          id="familiar-faixa"
-                          value={novoFamiliarFaixa}
-                          onChange={(e) => setNovoFamiliarFaixa(e.target.value)}
-                          className="mt-1.5 min-h-11 w-full rounded-xl border border-border-strong bg-canvas px-3 py-2 text-sm text-ink"
-                        >
-                          <option value="Vales Kids (1–5 anos)">Vales Kids (1–5 anos)</option>
-                          <option value="Vales Kids (6–8 anos)">Vales Kids (6–8 anos)</option>
-                          <option value="Vales Kids (9–11 anos)">Vales Kids (9–11 anos)</option>
-                          <option value="Adolescente / Jovem">Adolescente / Jovem</option>
-                          <option value="Adulto">Adulto</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="button button--lg button--outline btn-secundario h-auto min-h-11 w-full rounded-full border-2 border-ink px-5 py-2.5 text-sm font-semibold text-ink"
-                    >
-                      + Adicionar à família
-                    </button>
                   </form>
                 </div>
               </div>
