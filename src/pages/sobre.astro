@@ -5,26 +5,37 @@ import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 
-// Estrutura inspirada na página "Sobre" da Igreja da Cidade SJC, adaptada ao design system da iVales.
-// Conteúdo próprio da iVales ainda não confirmado: textos marcados com "[a confirmar]".
+// Texto-base escrito a partir do que o site já diz (igreja família, cultos, iGrupos e ministérios).
+// Revisar com a liderança antes de tratar como declaração oficial.
 const identidade = [
-  { titulo: 'Nossa Visão', texto: '[a confirmar]' },
-  { titulo: 'Nossa Missão', texto: '[a confirmar]' },
-  { titulo: 'Nossos Valores', texto: '[a confirmar]' },
-  { titulo: 'Nossos Propósitos', texto: 'Missões, Adoração, Comunhão, Serviço e Discipulado. [a confirmar]' },
+  {
+    titulo: 'Nossa Visão',
+    texto: 'Ser uma igreja família que acolhe, forma discípulos de Jesus e transforma os Vales por meio de vidas curadas e comunidades vivas.',
+  },
+  {
+    titulo: 'Nossa Missão',
+    texto: 'Levar o evangelho de Jesus a todas as pessoas, conectando cada uma a um lugar para pertencer, crescer na fé e servir.',
+  },
+  {
+    titulo: 'Nossos Valores',
+    texto: 'Jesus no centro, a Bíblia como base, família e comunhão, simplicidade, generosidade, excelência no servir e fé que se vive no dia a dia.',
+  },
+  {
+    titulo: 'Nossos Propósitos',
+    texto: 'Missões, Adoração, Comunhão, Serviço e Discipulado: é assim que vivemos a fé nos cultos, nos iGrupos e nos ministérios.',
+  },
 ];
-
 ---
 
 <BaseLayout
   title="Sobre"
-  description="Conheça a Igreja dos Vales: nossa história, visão, missão, valores e propósitos."
+  description="Conheça a Igreja dos Vales: quem somos, nossa visão, missão, valores e propósitos."
   headerTransparente
 >
   <HeroImersivo
     eyebrow="Bem-vindo"
     titulo="Nós somos a Igreja dos Vales!"
-    texto="Uma família para você pertencer. Conheça nossa história, nossos valores e o que cremos."
+    texto="Uma família para você pertencer. Conheça quem somos, nossos valores e o que cremos."
     alinhamento="centro"
     imagem={{
       src: '/images/sobre-hero.png',
@@ -33,7 +44,7 @@ const identidade = [
       height: 941,
     }}
   >
-    <Button href="#historia">Conheça nossa história</Button>
+    <Button href="#identidade">Conheça quem somos</Button>
   </HeroImersivo>
 
   <Section tom="escuro" class="bg-black">
@@ -43,26 +54,13 @@ const identidade = [
     </p>
   </Section>
 
-  <Section id="identidade" titulo="Quem somos" eyebrow="Nossa identidade" alinhamento="centro">
+  <Section id="identidade" titulo="Quem somos" eyebrow="Nossa identidade" alinhamento="centro" tom="elevado">
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {identidade.map((item) => (
         <Card titulo={item.titulo} class="border-0 bg-transparent p-0 hover:border-0">
           {item.texto}
         </Card>
       ))}
-    </div>
-  </Section>
-
-  <Section id="historia" titulo="Nossa História" eyebrow="Como começamos e onde estamos hoje" tom="elevado">
-    <div class="max-w-prose text-lg">
-      <p>
-        A Igreja dos Vales nasceu em [a confirmar — ano e cidade]. [a confirmar — contar a trajetória da igreja: nomes,
-        endereços e marcos até hoje.]
-      </p>
-      <p class="mt-4">
-        Hoje, estamos presentes em [a confirmar — cidades e campi]. [a confirmar — o que vem pela frente: expansão,
-        novos pontos de partida e planos.]
-      </p>
     </div>
   </Section>
 
