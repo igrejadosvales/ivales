@@ -229,7 +229,7 @@ export const PERFIL_DEMONSTRACAO: PerfilMembro = {
   email: 'mateus.oliveira@exemplo.com.br',
   telefone: '(51) 99812-3456',
   bairro: 'Centro',
-  campus: 'Sede — Igreja dos Vales',
+  campus: 'Gravataí',
   dataNascimento: '1993-08-14',
   membroDesde: 'Março de 2025',
   batizadoAguas: true,

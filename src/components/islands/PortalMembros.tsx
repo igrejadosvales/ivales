@@ -1,5 +1,7 @@
-import { type SyntheticEvent, useState } from 'react';
+import { type KeyboardEvent, type SyntheticEvent, useState } from 'react';
 import Providers from './Providers';
+import { getSupabaseClient } from '../../lib/supabase';
+import { formatarTelefone, somenteDigitos } from '../../lib/voluntariado';
 import {
   CURSOS_IDEALL,
   ESCALAS_INICIAIS,
@@ -24,8 +26,13 @@ const ABAS: { id: AbaPortal; rotulo: string; indisponivel?: boolean }[] = [
   { id: 'dados', rotulo: 'Meus dados' },
 ];
 
-export default function PortalMembros() {
-  const [autenticado, setAutenticado] = useState(false);
+interface Props {
+  /** Rota /membros/demo: já entra no painel com dados fictícios, sem login. */
+  demo?: boolean;
+}
+
+export default function PortalMembros({ demo = false }: Props) {
+  const [autenticado, setAutenticado] = useState(demo);
   const [modoAcesso, setModoAcesso] = useState<ModoAcesso>('login');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [lembrarDeMim, setLembrarDeMim] = useState(true);
@@ -38,6 +45,10 @@ export default function PortalMembros() {
   const [nomeCadastro, setNomeCadastro] = useState('');
   const [telefoneCadastro, setTelefoneCadastro] = useState('');
   const [erroAcesso, setErroAcesso] = useState('');
+  const [infoAcesso, setInfoAcesso] = useState('');
+  const [enviandoAcesso, setEnviandoAcesso] = useState(false);
+  // Erros por campo: aparecem abaixo do campo, e o foco vai para o primeiro com problema.
+  const [errosCampo, setErrosCampo] = useState<{ nome?: string; email?: string; senha?: string }>({});
 
   // Estado do membro logado
   const [perfil, setPerfil] = useState<PerfilMembro>(PERFIL_DEMONSTRACAO);
@@ -55,52 +66,120 @@ export default function PortalMembros() {
 
   const grupoAtual = GRUPOS_DISPONIVEIS.find((g) => g.id === grupoAtualId) ?? GRUPOS_DISPONIVEIS[0]!;
   const proximaEscala = escalas[0];
+  // No demo tudo fica liberado; fora dele, as áreas ainda em construção aparecem como "em breve".
+  const bloqueada = (aba: { indisponivel?: boolean }) => Boolean(aba.indisponivel) && !demo;
+  const cursosInscritos = cursos.filter((c) => c.inscrito);
+  const progressoGeral = (() => {
+    const t = cursosInscritos.reduce((acc, c) => {
+      const p = progressoCurso(c);
+      return { feitas: acc.feitas + p.concluidas, total: acc.total + p.total };
+    }, { feitas: 0, total: 0 });
+    return t.total === 0 ? 0 : Math.round((t.feitas / t.total) * 100);
+  })();
 
-  function entrarDemonstracao() {
-    setErroAcesso('');
-    setPerfil(PERFIL_DEMONSTRACAO);
-    setAutenticado(true);
-    setAbaAtiva('inicio');
+  // Padrão de abas do WAI-ARIA: setas trocam de aba (pulando as travadas), Home/End vão às pontas.
+  function navegarAbas(e: KeyboardEvent<HTMLDivElement>) {
+    const livres = ABAS.filter((aba) => !bloqueada(aba));
+    const atual = livres.findIndex((aba) => aba.id === abaAtiva);
+    const destino =
+      e.key === 'ArrowRight' ? livres[(atual + 1) % livres.length]
+      : e.key === 'ArrowLeft' ? livres[(atual - 1 + livres.length) % livres.length]
+      : e.key === 'Home' ? livres[0]
+      : e.key === 'End' ? livres[livres.length - 1]
+      : undefined;
+    if (!destino) return;
+    e.preventDefault();
+    setAbaAtiva(destino.id);
+    document.getElementById(`tab-${destino.id}`)?.focus();
   }
 
-  function submeterAcesso(e: SyntheticEvent<HTMLFormElement>) {
+  async function submeterAcesso(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setErroAcesso('');
+    setInfoAcesso('');
 
-    if (modoAcesso === 'login') {
-      if (!emailAcesso.trim() || !senhaAcesso.trim()) {
-        setErroAcesso('Preencha seu e-mail e sua senha para entrar, ou use o acesso rápido de demonstração.');
+    const email = emailAcesso.trim();
+    const nome = nomeCadastro.trim();
+
+    // Valida tudo de uma vez ao enviar (o botão nunca fica desabilitado por campo vazio).
+    const erros: { nome?: string; email?: string; senha?: string } = {};
+    if (modoAcesso === 'cadastro' && !nome) erros.nome = 'Informe seu nome completo.';
+    if (!email) erros.email = 'Informe seu e-mail.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.email = 'Confira o e-mail: falta o @ ou o domínio.';
+    if (!senhaAcesso) erros.senha = modoAcesso === 'login' ? 'Informe sua senha.' : 'Crie uma senha.';
+    else if (modoAcesso === 'cadastro' && senhaAcesso.length < 8) erros.senha = 'Use pelo menos 8 caracteres.';
+    setErrosCampo(erros);
+    const primeiro = (['nome', 'email', 'senha'] as const).find((c) => erros[c]);
+    if (primeiro) {
+      const ids = { nome: 'membro-nome-cadastro', email: 'membro-email-acesso', senha: 'membro-senha-acesso' };
+      document.getElementById(ids[primeiro])?.focus();
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setErroAcesso('O acesso está temporariamente indisponível. Tente novamente em instantes.');
+      return;
+    }
+
+    setEnviandoAcesso(true);
+    try {
+      if (modoAcesso === 'login') {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: senhaAcesso });
+        if (error || !data.user) {
+          setErroAcesso('E-mail ou senha incorretos.');
+          return;
+        }
+        await entrarComoMembro(supabase, data.user.id, email);
         return;
       }
 
-      const nomeDerivado = emailAcesso.includes('@')
-        ? emailAcesso
-            .split('@')[0]!
-            .replace(/[._-]+/g, ' ')
-            .replace(/\b\w/g, (l) => l.toUpperCase())
-        : PERFIL_DEMONSTRACAO.nome;
-
-      setPerfil((atual) => ({
-        ...atual,
-        nome: nomeDerivado || atual.nome,
-        email: emailAcesso.trim() || atual.email,
-      }));
-      setAutenticado(true);
-      setAbaAtiva('inicio');
-      return;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senhaAcesso,
+        options: {
+          data: { full_name: nome, phone: telefoneCadastro.trim() },
+          emailRedirectTo: `${window.location.origin}/membros`,
+        },
+      });
+      if (error) {
+        setErroAcesso(
+          /already|registered/i.test(error.message)
+            ? 'Este e-mail já está cadastrado. Entre com sua senha.'
+            : 'Não foi possível concluir o cadastro. Tente novamente.',
+        );
+        return;
+      }
+      if (data.session && data.user) {
+        await entrarComoMembro(supabase, data.user.id, email);
+      } else {
+        setModoAcesso('login');
+        setSenhaAcesso('');
+        setInfoAcesso('Cadastro realizado! Enviamos um link de confirmação para o seu e-mail. Confirme e depois entre.');
+      }
+    } catch {
+      setErroAcesso('Falha de conexão. Tente novamente.');
+    } finally {
+      setEnviandoAcesso(false);
     }
+  }
 
-    if (!nomeCadastro.trim() || !emailAcesso.trim() || !senhaAcesso.trim()) {
-      setErroAcesso('Preencha nome completo, e-mail e crie uma senha para iniciar sua jornada.');
-      return;
-    }
-
+  async function entrarComoMembro(supabase: NonNullable<ReturnType<typeof getSupabaseClient>>, id: string, email: string) {
+    const { data } = await supabase.from('member_profiles').select('*').eq('id', id).maybeSingle();
     setPerfil((atual) => ({
       ...atual,
-      nome: nomeCadastro.trim(),
-      email: emailAcesso.trim(),
-      telefone: telefoneCadastro.trim() || atual.telefone,
-      membroDesde: 'Novembro de 2026',
+      nome: data?.full_name ?? atual.nome,
+      email: data?.email ?? email,
+      telefone: data?.phone ?? '',
+      bairro: data?.neighborhood ?? '',
+      campus: data?.campus ?? '',
+      dataNascimento: data?.birth_date ?? '',
+      membroDesde: data?.member_since
+        ? new Date(`${data.member_since}T00:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        : atual.membroDesde,
+      batizadoAguas: data?.water_baptized ?? false,
+      dataBatismo: data?.baptism_date ?? '',
+      interesses: data?.interests ?? [],
     }));
     setAutenticado(true);
     setAbaAtiva('inicio');
@@ -142,284 +221,209 @@ export default function PortalMembros() {
   return (
     <Providers>
       {!autenticado ? (
-        <div className="mx-auto w-full max-w-md">
-          {/* Cartão de Login */}
-          <div className="rounded-2xl border border-border bg-canvas p-6 shadow-lg sm:p-8">
-            {/* Cabeçalho do acesso */}
-            <div className="flex flex-wrap items-center justify-end gap-4 border-b border-border/60 pb-6">
-              <div>
-                {modoAcesso === 'login' ? (
-                  <p className="text-xs text-ink-muted sm:text-sm">
-                    Não tem uma conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setModoAcesso('cadastro');
-                        setErroAcesso('');
-                      }}
-                      className="font-bold text-ink underline underline-offset-4 hover:text-accent-text"
-                    >
-                      Cadastre-se ↗
-                    </button>
-                  </p>
-                ) : (
-                  <p className="text-xs text-ink-muted sm:text-sm">
-                    Já tem uma conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setModoAcesso('login');
-                        setErroAcesso('');
-                      }}
-                      className="font-bold text-ink underline underline-offset-4 hover:text-accent-text"
-                    >
-                      Entrar ↗
-                    </button>
-                  </p>
-                )}
-              </div>
-            </div>
+        <div className="mx-auto my-auto w-full max-w-[400px]">
+          <div className="rounded-2xl border border-border/70 bg-canvas p-6 shadow-[0_1px_2px_rgb(46_44_36/0.05),0_12px_32px_-12px_rgb(46_44_36/0.18)] sm:p-8">
+            {/* A pomba é a única marca da tela: sem painel colorido, sem ícone genérico. */}
+            <span aria-hidden="true" className="logo-pomba-icone mx-auto block h-10 w-[3.4783rem]" />
 
-            {/* Conteúdo Central do Formulário */}
-            <div className="py-6 sm:py-8">
-              {/* Ícone Redondo com Seta */}
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-border/80 bg-surface text-ink shadow-xs" aria-hidden="true">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </div>
+            <h2 className="mt-5 text-center text-2xl font-bold tracking-tight text-ink">
+              {modoAcesso === 'login' ? 'Entrar' : 'Criar conta'}
+            </h2>
+            <p className="mt-1 text-center text-sm text-ink-muted">
+              {modoAcesso === 'login' ? 'Bem-vindo de volta. Use seu e-mail e senha.' : 'Leva menos de um minuto.'}
+            </p>
 
-              {/* Título de Boas-Vindas */}
-              <h2 className="mt-3 text-center text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
-                {modoAcesso === 'login' ? 'Entrar na Área de Membros' : 'Começar minha jornada'}
-              </h2>
-              <p className="mt-1.5 text-center text-sm text-ink-muted">
-                {modoAcesso === 'login'
-                  ? 'Por favor, insira seus dados para continuar.'
-                  : 'Preencha suas informações para criar sua conta no portal.'}
+            {erroAcesso && (
+              <p role="alert" className="mt-6 rounded-lg bg-surface px-4 py-3 text-sm font-medium text-ink">
+                {erroAcesso}
               </p>
+            )}
 
-              {erroAcesso && (
-                <div
-                  role="alert"
-                  className="mt-5 rounded-xl border-2 border-ink bg-surface p-3.5 text-sm font-semibold text-ink"
-                >
-                  {erroAcesso}
-                </div>
+            {infoAcesso && (
+              <p role="status" className="mt-6 rounded-lg bg-surface px-4 py-3 text-sm text-ink">
+                {infoAcesso}
+              </p>
+            )}
+
+            {msgEsqueciSenha && (
+              <div role="status" className="mt-6 rounded-lg bg-surface px-4 py-3 text-sm text-ink">
+                <p className="font-medium">Para redefinir a senha, fale com a secretaria.</p>
+                <p className="mt-1 text-ink-muted">
+                  Pelo WhatsApp ou pelo e-mail da igreja, na página de{' '}
+                  <a href="/contato" className="font-semibold text-accent-text underline underline-offset-2">
+                    contato
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+
+            <form onSubmit={submeterAcesso} className="mt-6 space-y-5" noValidate>
+              {modoAcesso === 'cadastro' && (
+                <CampoAcesso
+                  id="membro-nome-cadastro"
+                  rotulo="Nome completo"
+                  erro={errosCampo.nome}
+                  input={{
+                    type: 'text',
+                    value: nomeCadastro,
+                    onChange: (e) => setNomeCadastro(e.target.value),
+                    autoComplete: 'name',
+                  }}
+                />
               )}
 
-              {msgEsqueciSenha && (
-                <div
-                  role="status"
-                  className="mt-5 rounded-xl border border-accent/40 bg-accent/5 p-3.5 text-sm text-ink"
-                >
-                  <p className="font-semibold text-ink">Recuperação de Acesso</p>
-                  <p className="mt-1 text-xs text-ink-muted">
-                    Para redefinir sua senha, solicite um link de acesso pelo WhatsApp da secretaria ou pelo e-mail oficial da igreja.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setMsgEsqueciSenha(false)}
-                    className="mt-2 text-xs font-bold text-accent-text underline"
-                  >
-                    Fechar aviso
-                  </button>
-                </div>
+              <CampoAcesso
+                id="membro-email-acesso"
+                rotulo="E-mail"
+                erro={errosCampo.email}
+                input={{
+                  type: 'email',
+                  value: emailAcesso,
+                  onChange: (e) => setEmailAcesso(e.target.value),
+                  autoComplete: 'email',
+                  inputMode: 'email',
+                  placeholder: 'voce@exemplo.com',
+                }}
+              />
+
+              {modoAcesso === 'cadastro' && (
+                <CampoAcesso
+                  id="membro-telefone-cadastro"
+                  rotulo="WhatsApp"
+                  input={{
+                    type: 'tel',
+                    value: telefoneCadastro,
+                    onChange: (e) => setTelefoneCadastro(formatarTelefone(e.target.value)),
+                    required: true,
+                    autoComplete: 'tel',
+                    inputMode: 'tel',
+                    placeholder: '(51) 99999-0000',
+                  }}
+                />
               )}
 
-              {/* Formulário de Acesso */}
-              <form onSubmit={submeterAcesso} className="mt-6 space-y-4" noValidate>
-                {modoAcesso === 'cadastro' && (
-                  <div>
-                    <label htmlFor="membro-nome-cadastro" className="block text-xs font-semibold tracking-wide text-ink uppercase">
-                      Nome completo
-                    </label>
-                    <div className="relative mt-1.5">
-                      <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted" aria-hidden="true">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </span>
-                      <input
-                        id="membro-nome-cadastro"
-                        type="text"
-                        value={nomeCadastro}
-                        onChange={(e) => setNomeCadastro(e.target.value)}
-                        placeholder="Ex.: Mateus Oliveira"
-                        autoComplete="name"
-                        className="min-h-12 w-full rounded-xl border border-border bg-canvas pr-4 pl-10 text-sm text-ink placeholder:text-ink-muted/60 focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="membro-email-acesso" className="block text-xs font-semibold tracking-wide text-ink uppercase">
-                    Endereço de e-mail
-                  </label>
-                  <div className="relative mt-1.5">
-                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted" aria-hidden="true">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </span>
-                    <input
-                      id="membro-email-acesso"
-                      type="email"
-                      value={emailAcesso}
-                      onChange={(e) => setEmailAcesso(e.target.value)}
-                      placeholder="seuemail@exemplo.com.br"
-                      autoComplete="email"
-                      className="min-h-12 w-full rounded-xl border border-border bg-canvas pr-4 pl-10 text-sm text-ink placeholder:text-ink-muted/60 focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
-                    />
-                  </div>
-                </div>
-
-                {modoAcesso === 'cadastro' && (
-                  <div>
-                    <label
-                      htmlFor={modoAcesso === 'cadastro' ? 'membro-telefone-cadastro' : 'membro-telefone-acesso'}
-                      className="block text-xs font-semibold tracking-wide text-ink uppercase"
-                    >
-                      WhatsApp / Telefone {modoAcesso === 'cadastro' ? '(opcional)' : ''}
-                    </label>
-                    <div className="relative mt-1.5">
-                      <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted" aria-hidden="true">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                      </span>
-                      <input
-                        id="membro-telefone-cadastro"
-                        type="tel"
-                        value={telefoneCadastro}
-                        onChange={(e) => setTelefoneCadastro(e.target.value)}
-                        placeholder="(51) 99999-0000"
-                        autoComplete="tel"
-                        className="min-h-12 w-full rounded-xl border border-border bg-canvas pr-4 pl-10 text-sm text-ink placeholder:text-ink-muted/60 focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="membro-senha-acesso" className="block text-xs font-semibold tracking-wide text-ink uppercase">
-                    Senha
-                  </label>
-                  <div className="relative mt-1.5">
-                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted" aria-hidden="true">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </span>
-                    <input
-                      id="membro-senha-acesso"
-                      type={mostrarSenha ? 'text' : 'password'}
-                      value={senhaAcesso}
-                      onChange={(e) => setSenhaAcesso(e.target.value)}
-                      placeholder="••••••••"
-                      autoComplete={modoAcesso === 'login' ? 'current-password' : 'new-password'}
-                      className="min-h-12 w-full rounded-xl border border-border bg-canvas pr-11 pl-10 text-sm text-ink placeholder:text-ink-muted/60 focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
-                    />
+              <CampoAcesso
+                id="membro-senha-acesso"
+                rotulo="Senha"
+                erro={errosCampo.senha}
+                dica={modoAcesso === 'cadastro' ? 'mínimo de 8 caracteres' : undefined}
+                acaoRotulo={
+                  modoAcesso === 'login' ? (
                     <button
                       type="button"
-                      onClick={() => setMostrarSenha((v) => !v)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-muted hover:text-ink"
-                      aria-label={mostrarSenha ? 'Ocultar senha' : 'Exibir senha'}
+                      onClick={() => setMsgEsqueciSenha((v) => !v)}
+                      aria-expanded={msgEsqueciSenha}
+                      className="text-sm font-medium text-accent-text underline-offset-2 hover:underline"
                     >
-                      {mostrarSenha ? (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                        </svg>
-                      ) : (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      Esqueceu a senha?
                     </button>
-                  </div>
-                </div>
-
-                {/* Linha "Lembrar de mim" e "Esqueceu a senha?" */}
-                <div className="flex items-center justify-between pt-1 text-xs sm:text-sm">
-                  <label htmlFor="membro-lembrar-de-mim" className="flex cursor-pointer items-center gap-2 select-none">
-                    <input
-                      id="membro-lembrar-de-mim"
-                      type="checkbox"
-                      checked={lembrarDeMim}
-                      onChange={(e) => setLembrarDeMim(e.target.checked)}
-                      className="sr-only"
-                    />
-                    <span
-                      aria-hidden="true"
-                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                        lembrarDeMim ? 'bg-ink' : 'bg-border'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 rounded-full bg-canvas shadow-xs transition duration-200 ease-in-out ${
-                          lembrarDeMim ? 'translate-x-4.5' : 'translate-x-1'
-                        }`}
-                      />
-                    </span>
-                    <span className="font-medium text-ink">Lembrar de mim</span>
-                  </label>
-
+                  ) : undefined
+                }
+                input={{
+                  type: mostrarSenha ? 'text' : 'password',
+                  value: senhaAcesso,
+                  onChange: (e) => setSenhaAcesso(e.target.value),
+                  autoComplete: modoAcesso === 'login' ? 'current-password' : 'new-password',
+                }}
+                sufixo={
                   <button
                     type="button"
-                    onClick={() => setMsgEsqueciSenha((v) => !v)}
-                    className="font-semibold text-ink underline underline-offset-2 hover:text-accent-text"
+                    onClick={() => setMostrarSenha((v) => !v)}
+                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-ink-muted hover:text-ink"
+                    aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                    aria-pressed={mostrarSenha}
                   >
-                    Esqueceu a senha?
+                    <svg aria-hidden="true" className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      {mostrarSenha ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.1A9.8 9.8 0 0112 5c4.5 0 8.3 2.9 9.5 7a10 10 0 01-2.2 3.6M6.1 6.1A10 10 0 002.5 12c1.3 4.1 5 7 9.5 7a9.7 9.7 0 005.9-2" />
+                      ) : (
+                        <>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12C3.7 7.9 7.5 5 12 5s8.3 2.9 9.5 7c-1.2 4.1-5 7-9.5 7s-8.3-2.9-9.5-7z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      )}
+                    </svg>
                   </button>
-                </div>
+                }
+              />
 
-                {/* Botão Primário */}
-                <button
-                  type="submit"
-                  className="button button--lg button--primary mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink font-bold text-white transition-all hover:bg-ink/90 active:scale-[0.99]"
-                >
-                  <span>
-                    {modoAcesso === 'login'
-                      ? 'Entrar com E-mail'
-                      : 'Criar conta e acessar'}
-                  </span>
-                  <span aria-hidden="true">↗</span>
-                </button>
+              {modoAcesso === 'login' && (
+                <label htmlFor="membro-lembrar-de-mim" className="flex w-fit cursor-pointer items-center gap-2.5 text-sm text-ink">
+                  <input
+                    id="membro-lembrar-de-mim"
+                    type="checkbox"
+                    checked={lembrarDeMim}
+                    onChange={(e) => setLembrarDeMim(e.target.checked)}
+                    className="size-4 rounded accent-[var(--color-accent)]"
+                  />
+                  Manter conectado neste aparelho
+                </label>
+              )}
 
-                {/* Divisor "Ou" */}
-                <div className="relative my-4 flex items-center justify-center" aria-hidden="true">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border" />
-                  </div>
-                  <span className="relative bg-canvas px-3 text-xs font-semibold text-ink-muted uppercase">
-                    Ou
-                  </span>
-                </div>
+              <button
+                type="submit"
+                aria-busy={enviandoAcesso || undefined}
+                className="button button--lg button--primary btn-primario h-auto min-h-12 w-full rounded-full border-2 border-accent text-base font-semibold"
+              >
+                {enviandoAcesso
+                  ? modoAcesso === 'login'
+                    ? 'Entrando…'
+                    : 'Criando conta…'
+                  : modoAcesso === 'login'
+                    ? 'Entrar'
+                    : 'Criar conta'}
+              </button>
 
-                {/* Botão Modo Demonstração */}
+              {modoAcesso === 'cadastro' && (
+                <p className="text-center text-xs text-ink-muted">Vamos enviar um link de confirmação para o seu e-mail.</p>
+              )}
+            </form>
+
+            {/* Fluxo irmão + ajuda: uma linha cada, depois do botão. */}
+            <div className="mt-6 space-y-2 border-t border-border/70 pt-5 text-center text-sm text-ink-muted">
+              <p>
+                {modoAcesso === 'login' ? 'Ainda não tem conta?' : 'Já tem conta?'}{' '}
                 <button
                   type="button"
-                  onClick={entrarDemonstracao}
-                  className="button button--lg button--outline flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface font-semibold text-ink transition-all hover:border-ink hover:bg-canvas"
+                  onClick={() => {
+                    setModoAcesso(modoAcesso === 'login' ? 'cadastro' : 'login');
+                    setErroAcesso('');
+                    setInfoAcesso('');
+                    setErrosCampo({});
+                    setMsgEsqueciSenha(false);
+                  }}
+                  className="font-semibold text-accent-text underline-offset-2 hover:underline"
                 >
-                  <span className="text-accent-text" aria-hidden="true">✦</span>
-                  <span>Explorar painel (Modo Demonstração)</span>
+                  {modoAcesso === 'login' ? 'Criar conta' : 'Entrar'}
                 </button>
-              </form>
+              </p>
+              <p className="text-xs">
+                Problemas para entrar?{' '}
+                <a href="/contato" className="underline underline-offset-2 hover:text-ink">
+                  Fale com a secretaria
+                </a>
+              </p>
             </div>
-
           </div>
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Cabeçalho do Membro Logado */}
-          <div className="flex flex-col justify-between gap-6 rounded-cartao border border-border bg-canvas p-6 sm:flex-row sm:items-center">
+          {demo && (
+            <p role="note" className="flex items-center gap-2 text-sm text-ink-muted">
+              <span aria-hidden="true" className="size-2 rounded-full bg-border-strong" />
+              <span>
+                <strong className="font-semibold text-ink">Modo demonstração.</strong> Nomes e dados fictícios; nada é salvo.
+              </span>
+            </p>
+          )}
+
+          {/* Cabeçalho do membro: linha simples, sem cartão em volta */}
+          <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4">
               <div
                 aria-hidden="true"
-                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-xl font-bold text-on-accent"
+                className="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-lg font-semibold text-canvas"
               >
                 {perfil.nome
                   .split(' ')
@@ -429,42 +433,53 @@ export default function PortalMembros() {
                   .toUpperCase()}
               </div>
               <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-2xl font-bold text-ink">Olá, {perfil.nome.split(' ')[0]}</h2>
-                  <span className="chip chip--lg chip--secondary chip--default bg-surface font-semibold text-ink">
-                    <span className="chip__label">Membro desde {perfil.membroDesde}</span>
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-ink-muted">{perfil.campus}</p>
+                <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Olá, {perfil.nome.split(' ')[0]}</h2>
+                <p className="mt-0.5 text-sm text-ink-muted">
+                  Membro desde {perfil.membroDesde}
+                  {perfil.campus && <> · {perfil.campus}</>}
+                </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                disabled
-                className="button button--lg button--primary btn-primario h-auto min-h-11 cursor-not-allowed rounded-full border-2 border-border bg-surface px-5 py-2.5 text-sm font-semibold text-ink-muted"
-              >
-                Jornada IdeAll em breve
-              </button>
-              <button
-                type="button"
-                onClick={() => setAutenticado(false)}
-                className="button button--lg button--outline btn-secundario h-auto min-h-11 rounded-full border-2 border-ink px-5 py-2.5 text-sm font-semibold text-ink"
-              >
-                Sair da conta
-              </button>
+              {demo && (
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('ideall')}
+                  className="button button--lg button--primary btn-primario h-auto min-h-11 rounded-full border-2 border-accent px-5 py-2.5 text-sm font-semibold"
+                >
+                  Continuar Jornada IdeAll
+                </button>
+              )}
+              {demo ? (
+                <a
+                  href="/membros"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink underline-offset-4 hover:bg-canvas hover:underline"
+                >
+                  Sair da demonstração
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAutenticado(false)}
+                  className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink underline-offset-4 hover:bg-canvas hover:underline"
+                >
+                  Sair da conta
+                </button>
+              )}
             </div>
-          </div>
+          </header>
 
-          {/* Navegação por Abas do Portal */}
+          {/* Abas: linha com indicador azul sob a ativa; setas, Home e End navegam (pulando as travadas) */}
           <div
             role="tablist"
             aria-label="Seções da Área de Membros"
-            className="flex flex-wrap gap-2 rounded-cartao border border-border bg-canvas p-2"
+            onKeyDown={navegarAbas}
+            className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1"
           >
             {ABAS.map((aba) => {
               const selecionada = abaAtiva === aba.id;
+              const travada = bloqueada(aba);
               return (
                 <button
                   key={aba.id}
@@ -473,19 +488,21 @@ export default function PortalMembros() {
                   type="button"
                   aria-selected={selecionada}
                   aria-controls={`painel-${aba.id}`}
-                  disabled={aba.indisponivel}
-                  aria-disabled={aba.indisponivel || undefined}
-                  onClick={aba.indisponivel ? undefined : () => setAbaAtiva(aba.id)}
-                  className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
-                    aba.indisponivel
-                      ? 'cursor-not-allowed bg-surface text-ink-muted/70'
+                  tabIndex={selecionada ? 0 : -1}
+                  disabled={travada}
+                  aria-disabled={travada || undefined}
+                  onClick={travada ? undefined : () => setAbaAtiva(aba.id)}
+                  className={`relative min-h-11 shrink-0 px-4 text-sm whitespace-nowrap transition-colors duration-150 ${
+                    travada
+                      ? 'cursor-not-allowed text-ink-muted/60'
                       : selecionada
-                      ? 'bg-accent text-on-accent'
-                      : 'bg-transparent text-ink hover:bg-surface'
+                        ? 'font-semibold text-ink'
+                        : 'font-medium text-ink-muted hover:text-ink'
                   }`}
                 >
+                  {selecionada && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-accent" />}
                   {aba.rotulo}
-                  {aba.indisponivel && <span className="ml-1 text-[10px] font-bold uppercase">(em breve)</span>}
+                  {travada && <span className="ml-1 font-normal">· em breve</span>}
                 </button>
               );
             })}
@@ -493,61 +510,127 @@ export default function PortalMembros() {
 
           {/* ABA 1: VISÃO GERAL */}
           {abaAtiva === 'inicio' && (
-            <div id="painel-inicio" role="tabpanel" aria-labelledby="tab-inicio" className="space-y-8">
-              {/* Resumo da Jornada IdeAll */}
-              <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                  <div>
-                    <p className="text-sm font-semibold tracking-wide text-accent-text uppercase">Jornada IdeAll</p>
-                    <h3 className="mt-1 text-xl font-bold text-ink">Esta área estará disponível em breve.</h3>
-                  </div>
-                  <span className="chip chip--lg chip--secondary chip--default self-start bg-surface font-semibold text-ink-muted sm:self-center">
-                    <span className="chip__label">Em breve</span>
-                  </span>
-                </div>
-                <p className="mt-4 max-w-2xl text-ink-muted">
-                  Estamos preparando cursos e conteúdos para acompanhar sua jornada de fé.
-                </p>
-              </div>
-
-              {/* Cartões de Resumo Rápido */}
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Meu iGrupo */}
-                <article className="flex flex-col justify-between rounded-cartao border border-border bg-canvas p-6">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-bold tracking-wide text-accent-text uppercase">Meu iGrupo</p>
-                      <span className="chip chip--lg chip--secondary chip--default bg-surface font-semibold text-ink-muted">
-                        <span className="chip__label">Em breve</span>
+            <div id="painel-inicio" role="tabpanel" aria-labelledby="tab-inicio" tabIndex={0} className="outline-none">
+              {demo ? (
+                // Um destaque (progresso da jornada) + uma lista do que vem a seguir. Sem grade de cartões iguais.
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+                  <section aria-labelledby="resumo-jornada" className="rounded-2xl bg-canvas p-6 sm:p-8">
+                    <p id="resumo-jornada" className="text-sm font-medium text-ink-muted">
+                      Jornada IdeAll
+                    </p>
+                    <p className="mt-2 flex items-baseline gap-3">
+                      <span className="text-5xl font-bold tracking-tight text-ink tabular-nums">{progressoGeral}%</span>
+                      <span className="text-sm text-ink-muted">
+                        {cursosInscritos.length === 0
+                          ? 'nenhum curso iniciado'
+                          : `${cursosInscritos.length} ${cursosInscritos.length === 1 ? 'curso em andamento' : 'cursos em andamento'}`}
                       </span>
+                    </p>
+                    <div
+                      className="mt-5 h-1.5 overflow-hidden rounded-full bg-surface"
+                      role="progressbar"
+                      aria-label="Progresso na Jornada IdeAll"
+                      aria-valuenow={progressoGeral}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${progressoGeral}%` }} />
                     </div>
-                    <h3 className="mt-3 text-xl font-bold text-ink">Seu iGrupo estará aqui em breve.</h3>
-                    <p className="mt-2 text-sm text-ink-muted">Estamos preparando essa área para você acompanhar seu grupo.</p>
-                  </div>
-                  <div className="mt-6 border-t border-border pt-4">
-                    <span className="text-sm font-bold text-ink-muted">Indisponível no momento</span>
-                  </div>
-                </article>
+                    <ul className="mt-6 divide-y divide-border/70">
+                      {cursosInscritos.slice(0, 3).map((c) => {
+                        const p = progressoCurso(c);
+                        return (
+                          <li key={c.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                            <span className="font-medium text-ink">{c.titulo}</span>
+                            <span className="text-ink-muted tabular-nums">
+                              {p.concluidas} de {p.total} aulas
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => setAbaAtiva('ideall')}
+                      className="mt-4 text-sm font-semibold text-accent-text underline-offset-4 hover:underline"
+                    >
+                      Ver todos os cursos
+                    </button>
+                  </section>
 
-                {/* Próxima Escala */}
-                {proximaEscala && (
-                  <article className="flex flex-col justify-between rounded-cartao border border-border bg-canvas p-6">
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold tracking-wide text-accent-text uppercase">Próxima Escala</p>
-                        <span className="chip chip--lg chip--secondary chip--default bg-surface font-semibold text-ink-muted">
-                          <span className="chip__label">Em breve</span>
-                        </span>
+                  <section aria-label="Próximos compromissos" className="divide-y divide-border">
+                    <div className="pb-6">
+                      <p className="text-sm font-medium text-ink-muted">Meu iGrupo</p>
+                      <p className="mt-1 text-lg font-semibold text-ink">{grupoAtual.nome}</p>
+                      <p className="mt-0.5 text-sm text-ink-muted">
+                        {grupoAtual.diaHorario} · {grupoAtual.bairro}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setAbaAtiva('igrupo')}
+                        className="mt-2 text-sm font-semibold text-ink underline underline-offset-4 hover:text-accent-text"
+                      >
+                        Ver meu iGrupo
+                      </button>
+                    </div>
+                    {proximaEscala && (
+                      <div className="pt-6">
+                        <p className="text-sm font-medium text-ink-muted">Próxima escala</p>
+                        <p className="mt-1 text-lg font-semibold text-ink">{proximaEscala.data}</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">
+                          {proximaEscala.culto} · {proximaEscala.funcao}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setAbaAtiva('escalas')}
+                          className="mt-2 text-sm font-semibold text-ink underline underline-offset-4 hover:text-accent-text"
+                        >
+                          Ver minhas escalas
+                        </button>
                       </div>
-                      <h3 className="mt-3 text-xl font-bold text-ink">Suas escalas estarão aqui em breve.</h3>
-                      <p className="mt-2 text-sm text-ink-muted">Em breve você poderá consultar seus horários e funções.</p>
+                    )}
+                  </section>
+                </div>
+              ) : (
+                // Estado vazio honesto: o que vem por aí e o que já dá para fazer agora.
+                <section aria-labelledby="em-preparo" className="grid gap-8 rounded-2xl bg-canvas p-6 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+                  <div>
+                    <h3 id="em-preparo" className="text-xl font-bold tracking-tight text-ink">
+                      Sua área está sendo preparada
+                    </h3>
+                    <p className="mt-2 max-w-prose text-ink-muted">
+                      Cursos da Jornada IdeAll, seu iGrupo e suas escalas vão aparecer aqui assim que estiverem prontos.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setAbaAtiva('dados')}
+                        className="button button--lg button--primary btn-primario h-auto min-h-11 rounded-full border-2 border-accent px-5 py-2.5 text-sm font-semibold"
+                      >
+                        Conferir meus dados
+                      </button>
+                      <a
+                        href="/igrupos"
+                        className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink underline underline-offset-4 hover:text-accent-text"
+                      >
+                        Encontrar um iGrupo
+                      </a>
                     </div>
-                    <div className="mt-6 border-t border-border pt-4">
-                      <span className="text-sm font-bold text-ink-muted">Indisponível no momento</span>
-                    </div>
-                  </article>
-                )}
-              </div>
+                  </div>
+                  <ul className="divide-y divide-border/70 text-sm">
+                    {[
+                      ['Jornada IdeAll', 'Cursos curtos para crescer na fé, no seu ritmo.'],
+                      ['Meu iGrupo', 'Encontros, líderes e presença do seu grupo.'],
+                      ['Minhas escalas', 'Datas e funções nas equipes de voluntários.'],
+                    ].map(([titulo, texto]) => (
+                      <li key={titulo} className="py-3 first:pt-0 last:pb-0">
+                        <p className="font-semibold text-ink">{titulo}</p>
+                        <p className="text-ink-muted">{texto}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </div>
           )}
 
@@ -555,7 +638,7 @@ export default function PortalMembros() {
           {abaAtiva === 'ideall' && (
             <div id="painel-ideall" role="tabpanel" aria-labelledby="tab-ideall" className="space-y-6">
               <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8">
-                <p className="text-sm font-semibold tracking-wide text-accent-text uppercase">Rede de cursos</p>
+                <p className="text-sm font-medium text-ink-muted">Rede de cursos</p>
                 <h3 className="mt-1 text-2xl font-bold text-ink">Jornada IdeAll</h3>
                 <p className="mt-2 max-w-prose text-ink-muted">
                   Cursos curtos para crescer na fé, no seu ritmo. Inscreva-se e marque cada aula conforme concluir.
@@ -743,7 +826,7 @@ export default function PortalMembros() {
                       >
                         <div>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold tracking-wide text-accent-text uppercase">
+                            <span className="text-sm font-medium text-ink-muted">
                               {grupo.perfil} • {grupo.bairro}
                             </span>
                             <span className="text-xs font-semibold text-ink-muted">{grupo.vagas} vagas</span>
@@ -782,7 +865,7 @@ export default function PortalMembros() {
             <div id="painel-escalas" role="tabpanel" aria-labelledby="tab-escalas" className="space-y-8">
               {/* Escalas do Membro */}
               <div className="rounded-cartao border border-border bg-canvas p-6 sm:p-8">
-                <p className="text-sm font-semibold tracking-wide text-accent-text uppercase">Servir na Casa</p>
+                <p className="text-sm font-medium text-ink-muted">Servir na Casa</p>
                 <h3 className="mt-1 text-2xl font-bold text-ink">Minhas Próximas Escalas</h3>
                 <p className="mt-2 text-ink-muted">
                   Confirme sua disponibilidade com antecedência para ajudar o líder do seu ministério na organização do culto.
@@ -982,5 +1065,58 @@ export default function PortalMembros() {
         </div>
       )}
     </Providers>
+  );
+}
+
+// Campo do login/cadastro: rótulo acima (com ação opcional à direita, ex.: "Esqueceu a senha?"),
+// erro abaixo ligado por aria-describedby. Texto de 16px no celular para o iOS não dar zoom.
+function CampoAcesso({
+  id,
+  rotulo,
+  dica,
+  erro,
+  acaoRotulo,
+  sufixo,
+  input,
+}: {
+  id: string;
+  rotulo: string;
+  dica?: string;
+  erro?: string;
+  acaoRotulo?: React.ReactNode;
+  sufixo?: React.ReactNode;
+  input: React.InputHTMLAttributes<HTMLInputElement>;
+}) {
+  const idErro = `${id}-erro`;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="text-sm font-medium text-ink">
+          {rotulo}
+          {dica && <span className="ml-1 font-normal text-ink-muted">{dica}</span>}
+        </label>
+        {acaoRotulo}
+      </div>
+      <div className="relative mt-1.5">
+        <input
+          id={id}
+          {...input}
+          aria-invalid={erro ? true : undefined}
+          aria-describedby={erro ? idErro : undefined}
+          className={`min-h-12 w-full rounded-lg border bg-canvas px-3.5 text-base text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-ink-muted/70 focus:border-accent focus:ring-3 focus:ring-accent/20 focus:outline-none sm:text-sm ${
+            sufixo ? 'pr-11' : ''
+          } ${erro ? 'border-ink' : 'border-border-strong/50'}`}
+        />
+        {sufixo}
+      </div>
+      {erro && (
+        <p id={idErro} className="mt-1.5 flex items-center gap-1.5 text-sm text-ink">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-11.5a.75.75 0 011.5 0v4a.75.75 0 01-1.5 0v-4zM10 14.5a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+          {erro}
+        </p>
+      )}
+    </div>
   );
 }

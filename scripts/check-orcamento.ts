@@ -24,7 +24,7 @@ export const ORCAMENTO_JS_LAZY_GZIP = 250 * 1024;
 export const PAGINAS_COM_LAZY = ['igrupos'];
 export const SCRIPTS_PERMITIDOS = ['menu-mobile', 'header-scroll', 'home-secoes'];
 // Rotas (relativas ao dist/, sem barra final) que podem ter ilha.
-export const PAGINAS_COM_ILHA = ['design', 'contato', 'voluntariado', 'membros', 'igrupos'];
+export const PAGINAS_COM_ILHA = ['design', 'contato', 'voluntariado', 'membros', 'membros/demo', 'igrupos'];
 
 const SCRIPT = /<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
 

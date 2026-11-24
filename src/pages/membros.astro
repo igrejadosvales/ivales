@@ -1,28 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Container from '../components/ui/Container.astro';
-import PortalMembros from '../components/islands/PortalMembros';
+import PaginaMembros from '../components/membros/PaginaMembros.astro';
 ---
 
-<BaseLayout
-  title="Área de Membros"
-  noindex
-  description="Portal de membros da Igreja dos Vales: Jornada IdeAll (rede de cursos), meu iGrupo, minhas escalas e meus dados."
->
-  <section
-    id="portal-membros"
-    data-tom="elevado"
-    aria-labelledby="portal-membros-titulo"
-    class="flex min-h-[calc(100dvh-4rem)] flex-col justify-center bg-surface py-10 text-ink lg:py-16"
-  >
-    <Container>
-      <div class="mb-6 flex flex-col items-center text-center">
-        <h1 id="portal-membros-titulo" class="text-2xl font-bold tracking-tight text-ink sm:text-3xl lg:text-4xl">
-          Área de Membros
-        </h1>
-      </div>
-
-      <PortalMembros client:load />
-    </Container>
-  </section>
-</BaseLayout>
+<PaginaMembros />

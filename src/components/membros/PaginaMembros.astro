@@ -1,0 +1,44 @@
+---
+// Moldura da Área de Membros: tela cheia, sem cabeçalho/rodapé do site e com um "Voltar" no canto.
+// Usada por /membros (login) e /membros/demo (painel com dados fictícios).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PortalMembros from '../islands/PortalMembros';
+
+interface Props {
+  demo?: boolean;
+}
+
+const { demo = false } = Astro.props;
+---
+
+<BaseLayout
+  title={demo ? 'Área de Membros: demonstração' : 'Área de Membros'}
+  noindex
+  semNavegacao
+  description="Portal de membros da Igreja dos Vales: Jornada IdeAll (rede de cursos), meu iGrupo, minhas escalas e meus dados."
+>
+  <section
+    id="portal-membros"
+    data-tom="elevado"
+    aria-labelledby="portal-membros-titulo"
+    class="relative flex min-h-dvh flex-col bg-surface text-ink"
+  >
+    <!-- Sem cabeçalho e rodapé: o único caminho de volta ao site é este link. -->
+    <div class="px-4 pt-4 sm:px-6 lg:px-8">
+      <a
+        href="/"
+        class="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-canvas px-4 text-sm font-semibold text-ink shadow-sm transition-colors hover:border-border-strong"
+      >
+        <span aria-hidden="true">←</span>
+        Voltar ao site
+      </a>
+    </div>
+
+    <div class="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+      <!-- O cartão de login ("Entrar") e o painel ("Olá, …") já dizem onde a pessoa está: o h1 fica para leitores de tela. -->
+      <h1 id="portal-membros-titulo" class="sr-only">Área de Membros</h1>
+
+      <PortalMembros client:load demo={demo} />
+    </div>
+  </section>
+</BaseLayout>
