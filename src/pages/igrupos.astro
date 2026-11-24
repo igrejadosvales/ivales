@@ -10,10 +10,15 @@ import { IGRUPOS, localDoGrupo, quandoReune } from '../lib/igrupos';
   title="iGrupos"
   description="Encontre um iGrupo da Igreja dos Vales perto de você: busque por bairro, cidade, perfil e dia, veja no mapa e fale direto com os líderes pelo WhatsApp."
 >
-  <h1 class="sr-only">iGrupos: encontre um pequeno grupo perto de você</h1>
+  <section class="bg-canvas pt-20 pb-6 lg:pt-24">
+    <h1 class="hero-entrada hero-entrada-1 px-4 text-center text-hero text-ink sm:px-6 lg:px-8">iGrupos</h1>
+    <p class="hero-entrada hero-entrada-2 mx-auto mt-4 max-w-2xl px-4 text-center text-lg text-ink-muted sm:px-6 lg:px-8">
+      Pequenos grupos que se reúnem nas casas durante a semana. Encontre um perto de você e chame os líderes no WhatsApp.
+    </p>
+  </section>
 
-  <section id="explorar" aria-label="Encontrar um iGrupo" class="scroll-mt-20 bg-canvas pt-24 pb-secao lg:pb-secao-lg">
-    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section id="explorar" aria-label="Encontrar um iGrupo" class="scroll-mt-20 bg-canvas">
+    <div class="w-full">
       <IgruposExplorer client:only="react" />
       <noscript>
         <p class="rounded-xl border border-border bg-surface p-4 text-sm text-ink-muted">

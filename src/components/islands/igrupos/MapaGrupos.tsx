@@ -47,6 +47,15 @@ export default function MapaGrupos({ grupos, selecionadoId, onSelecionar, ativo 
     };
   }, []);
 
+  // Recalcula o tamanho quando a área do mapa muda (ex.: lista recolhida/expandida).
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const obs = new ResizeObserver(() => mapaRef.current?.invalidateSize());
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   // Pins: recria quando o filtro ou a seleção mudam (no máximo 14).
   useEffect(() => {
     const camada = camadaRef.current;

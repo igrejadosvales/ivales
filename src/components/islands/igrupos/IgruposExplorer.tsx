@@ -31,6 +31,7 @@ const Carregando = ({ texto }: { texto: string }) => (
 export default function IgruposExplorer() {
   const [filtros, setFiltros] = useState<FiltrosIgrupos>(FILTROS_VAZIOS);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
+  const [listaAberta, setListaAberta] = useState(true);
   const [tokens, setTokens] = useState(TOKENS_PADRAO);
   useEffect(() => setTokens(lerTokens()), []);
 
@@ -45,8 +46,8 @@ export default function IgruposExplorer() {
 
   return (
     <Providers>
-      <div className="grid gap-4 lg:h-[min(780px,calc(100dvh-7rem))] lg:grid-cols-[22rem_1fr]">
-        <div className="order-2 flex min-h-0 flex-col lg:order-1 [&>aside]:flex-1">
+      <div className={`grid lg:h-[min(820px,calc(100dvh-10rem))] ${listaAberta ? 'lg:grid-cols-[24rem_1fr]' : 'lg:grid-cols-1'}`}>
+        <div id="lista-igrupos" className={`order-2 flex min-h-0 flex-col lg:order-1 [&>aside]:flex-1 ${listaAberta ? '' : 'lg:hidden'}`}>
           <Sidebar
             filtros={filtros}
             onFiltros={setFiltros}
@@ -58,7 +59,17 @@ export default function IgruposExplorer() {
         </div>
 
         <section aria-label="Mapa dos iGrupos" className="order-1 flex min-h-0 flex-col lg:order-2">
-          <div className="relative h-[60dvh] min-h-0 flex-1 overflow-hidden rounded-cartao border border-border bg-canvas lg:h-auto">
+          <div className="relative isolate z-0 h-[60dvh] min-h-0 flex-1 overflow-hidden border-y border-border bg-canvas lg:h-auto">
+            <button
+              type="button"
+              aria-expanded={listaAberta}
+              aria-controls="lista-igrupos"
+              onClick={() => setListaAberta((v) => !v)}
+              className="absolute top-3 left-14 z-[500] hidden min-h-10 items-center gap-2 rounded-full border border-border bg-canvas px-4 text-sm font-semibold text-ink shadow hover:border-border-strong lg:inline-flex"
+            >
+              <span aria-hidden="true">{listaAberta ? '‹' : '›'}</span>
+              {listaAberta ? 'Recolher lista' : `Mostrar lista (${resultados.length})`}
+            </button>
             <div className="absolute inset-0">
               <LimiteDeErro mensagem="Não foi possível carregar o mapa. Use a lista ao lado para ver os grupos.">
                 <Suspense fallback={<Carregando texto="Carregando o mapa…" />}>

@@ -66,7 +66,7 @@ export default function Sidebar({ filtros, onFiltros, resultados, total, selecio
   return (
     <aside
       aria-label="Buscar iGrupos"
-      className="flex min-h-0 flex-col overflow-hidden rounded-cartao border border-border bg-canvas"
+      className="flex min-h-0 flex-col overflow-hidden border-y border-border bg-canvas lg:border-r"
     >
       <div className="space-y-4 border-b border-border p-4">
         <div>
@@ -124,6 +124,8 @@ export default function Sidebar({ filtros, onFiltros, resultados, total, selecio
         )}
         {resultados.map((g) => {
           const ativo = g.id === selecionadoId;
+          // Um único número por grupo: o primeiro líder que tem WhatsApp na planilha.
+          const contato = g.lideres.find((l) => l.whatsapp)?.whatsapp;
           return (
             <li key={g.id} ref={ativo ? itemRef : undefined}>
               <article className={`rounded-xl border p-4 ${ativo ? 'border-accent bg-surface' : 'border-border bg-canvas'}`}>
@@ -142,7 +144,7 @@ export default function Sidebar({ filtros, onFiltros, resultados, total, selecio
                 </button>
                 {ativo && (
                   <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
-                    {g.lideres.filter((l) => l.whatsapp).length === 0 && (
+                    {!contato && (
                       <p className="text-sm text-ink-muted">
                         Ainda sem WhatsApp aqui.{' '}
                         <a href="/contato" className="font-bold text-accent-text underline">
@@ -151,19 +153,15 @@ export default function Sidebar({ filtros, onFiltros, resultados, total, selecio
                         .
                       </p>
                     )}
-                    {g.lideres.map(
-                      (l) =>
-                        l.whatsapp && (
-                          <a
-                            key={l.nome}
-                            href={linkWhatsapp(l.whatsapp, g.nome)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="button button--primary btn-primario inline-flex min-h-10 items-center rounded-full border-2 border-accent px-4 text-sm font-semibold"
-                          >
-                            WhatsApp {l.nome}
-                          </a>
-                        ),
+                    {contato && (
+                      <a
+                        href={linkWhatsapp(contato, g.nome)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button button--primary btn-primario inline-flex min-h-10 items-center rounded-full border-2 border-accent px-4 text-sm font-semibold"
+                      >
+                        WhatsApp líder
+                      </a>
                     )}
                   </div>
                 )}
