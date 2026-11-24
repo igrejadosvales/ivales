@@ -18,9 +18,13 @@ import { gzipSync } from 'node:zlib';
 
 export const ORCAMENTO_CSS_GZIP = 20 * 1024;
 export const ORCAMENTO_JS_ILHA_GZIP = 140 * 1024;
+// Chunks carregados sob demanda (import()) a partir das ilhas: o mapa de /igrupos. Têm teto próprio,
+// separado do JS inicial, e só contam nas rotas de PAGINAS_COM_LAZY.
+export const ORCAMENTO_JS_LAZY_GZIP = 250 * 1024;
+export const PAGINAS_COM_LAZY = ['igrupos'];
 export const SCRIPTS_PERMITIDOS = ['menu-mobile', 'header-scroll'];
 // Rotas (relativas ao dist/, sem barra final) que podem ter ilha.
-export const PAGINAS_COM_ILHA = ['design', 'contato', 'voluntariado', 'membros'];
+export const PAGINAS_COM_ILHA = ['design', 'contato', 'voluntariado', 'membros', 'igrupos'];
 
 const SCRIPT = /<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
 
@@ -79,6 +83,11 @@ export function importsEstaticos(js: string): string[] {
   return [...js.matchAll(/(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"']+\.js)["']/g)].map((m) => m[1] ?? '');
 }
 
+// Imports dinâmicos relativos (import("./a.js")).
+export function importsDinamicos(js: string): string[] {
+  return [...js.matchAll(/\bimport\(\s*["'`](\.{1,2}\/[^"'`]+\.js)["'`]\s*\)/g)].map((m) => m[1] ?? '');
+}
+
 export const gzip = (texto: string | Buffer): number => gzipSync(texto, { level: 9 }).length;
 
 async function listarHtml(pasta: string): Promise<string[]> {
@@ -92,19 +101,34 @@ async function listarHtml(pasta: string): Promise<string[]> {
   return saida;
 }
 
-async function jsDaIlha(pasta: string, urls: string[]): Promise<{ arquivos: string[]; gzip: number }> {
+async function jsDaIlha(pasta: string, urls: string[]): Promise<{ arquivos: string[]; gzip: number; lazyGzip: number }> {
   const vistos = new Set<string>();
   const fila = urls.map((u) => join(pasta, u));
   let total = 0;
+  const lazy: string[] = [];
   while (fila.length > 0) {
     const arquivo = resolve(fila.shift() ?? '');
     if (vistos.has(arquivo)) continue;
     vistos.add(arquivo);
     const js = await readFile(arquivo);
     total += gzip(js);
-    for (const imp of importsEstaticos(js.toString('utf8'))) fila.push(join(dirname(arquivo), imp));
+    const texto = js.toString('utf8');
+    for (const imp of importsEstaticos(texto)) fila.push(join(dirname(arquivo), imp));
+    for (const imp of importsDinamicos(texto)) lazy.push(join(dirname(arquivo), imp));
   }
-  return { arquivos: [...vistos].map((a) => relative(pasta, a)), gzip: total };
+  // Chunks sob demanda (e o que eles importam) ficam de fora do JS inicial.
+  const lazyVistos = new Set<string>();
+  let lazyTotal = 0;
+  while (lazy.length > 0) {
+    const arquivo = resolve(lazy.shift() ?? '');
+    if (vistos.has(arquivo) || lazyVistos.has(arquivo)) continue;
+    lazyVistos.add(arquivo);
+    const js = await readFile(arquivo);
+    lazyTotal += gzip(js);
+    const texto = js.toString('utf8');
+    for (const imp of [...importsEstaticos(texto), ...importsDinamicos(texto)]) lazy.push(join(dirname(arquivo), imp));
+  }
+  return { arquivos: [...vistos].map((a) => relative(pasta, a)), gzip: total, lazyGzip: lazyTotal };
 }
 
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
@@ -130,6 +154,10 @@ async function principal(pasta: string): Promise<number> {
     if (PAGINAS_COM_ILHA.includes(rota)) {
       const ilha = await jsDaIlha(pasta, urlsDeIlha(html));
       console.log(`${rota}: CSS ${kb(cssGzip)} gzip; JS das ilhas ${kb(ilha.gzip)} gzip (${ilha.arquivos.length} arquivos)`);
+      if (PAGINAS_COM_LAZY.includes(rota)) {
+        console.log(`${rota}: JS sob demanda (mapa e 3D) ${kb(ilha.lazyGzip)} gzip`);
+        if (ilha.lazyGzip > ORCAMENTO_JS_LAZY_GZIP) falhas.push(`${rota}: JS sob demanda ${kb(ilha.lazyGzip)} gzip > ${kb(ORCAMENTO_JS_LAZY_GZIP)}`);
+      }
       if (ilha.gzip > ORCAMENTO_JS_ILHA_GZIP) falhas.push(`${rota}: JS ${kb(ilha.gzip)} gzip > ${kb(ORCAMENTO_JS_ILHA_GZIP)}`);
     } else {
       const problemas = scriptsProibidos(html);

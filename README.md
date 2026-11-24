@@ -65,6 +65,8 @@ public/placeholders/    imagens e vídeo de exemplo locais
 
 Varre todo arquivo de texto do `dist/`: `html`, `htm`, `svg`, `css`, `js`, `mjs`, `cjs`, `json`, `xml`, `txt` e `webmanifest`. Binários (fontes, imagens) não têm texto de referência; o caminho que os referencia já é verificado.
 
+**Exceção declarada:** o mapa de `/igrupos` (Leaflet) carrega tiles de `tile.openstreetmap.org`, citado só em strings de JS (`HOSTS_PERMITIDOS_NO_JS`). HTML e CSS continuam sem domínio externo. O mapa é um chunk `import()` carregado sob demanda, com teto próprio no `check:budget` (`ORCAMENTO_JS_LAZY_GZIP`). As coordenadas dos grupos em `src/lib/igrupos.ts` são aproximadas (centro do bairro) de propósito.
+
 Casos cobertos, cada um com fixture em `scripts/check-no-external.test.ts`:
 
 - **Carregam:** `src`, `srcset`, `poster`, `data`, `background`, `lowsrc`, `dynsrc`, `codebase`, `archive`; `<use href>`, `<base href>`, `<image href>`, `xlink:href` e qualquer `href` que não seja de `<a>`; `<link>` externo (exceto canonical e alternate).

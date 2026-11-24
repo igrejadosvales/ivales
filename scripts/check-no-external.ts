@@ -15,6 +15,9 @@
 // - JS: strings literais com URL externa (não rastreia URL montada por concatenação).
 // - Texto (json, xml, txt, webmanifest): URLs http(s)/ws(s)/ftp e "//host" entre aspas.
 //
+// Exceção declarada: o mapa de /igrupos carrega tiles do OpenStreetMap (HOSTS_PERMITIDOS_NO_JS, só em
+// strings de JS; HTML e CSS continuam sem nenhum domínio externo).
+//
 // Não conta: <a href> (navegação do usuário), comentários HTML, data: e namespaces XML
 // (http://www.w3.org/... em xmlns ou em JS/texto), que são identificadores e não carregam nada;
 // em JS, a string exata "https://react.dev/errors/" das mensagens de erro do React.
@@ -114,11 +117,23 @@ function ehTextoDeErroDoReact(url: string): boolean {
   return normalizarUrl(url) === 'https://react.dev/errors/';
 }
 
+// Hosts que o JS pode citar. Só o tile server do mapa de /igrupos; ver o cabeçalho do arquivo.
+export const HOSTS_PERMITIDOS_NO_JS = ['tile.openstreetmap.org'];
+
+function ehHostPermitidoNoJs(url: string): boolean {
+  try {
+    const host = new URL(normalizarUrl(url)).hostname;
+    return HOSTS_PERMITIDOS_NO_JS.includes(host);
+  } catch {
+    return false;
+  }
+}
+
 export function encontrarNoJs(js: string, origem = 'js'): Achado[] {
   const achados: Achado[] = [];
   for (const m of js.matchAll(/(["'`])((?:https?:)?\/\/[^"'`\s]+)\1/gi)) {
     const url = m[2] ?? '';
-    if (ehExterna(url) && !ehNamespace(url) && !ehTextoDeErroDoReact(url)) achados.push({ origem, url: normalizarUrl(url) });
+    if (ehExterna(url) && !ehNamespace(url) && !ehTextoDeErroDoReact(url) && !ehHostPermitidoNoJs(url)) achados.push({ origem, url: normalizarUrl(url) });
   }
   return achados;
 }

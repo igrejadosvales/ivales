@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+import IgruposExplorer from '../components/islands/igrupos/IgruposExplorer';
+import { IGRUPOS, localDoGrupo, quandoReune } from '../lib/igrupos';
+---
+
+<BaseLayout
+  title="iGrupos"
+  description="Encontre um iGrupo da Igreja dos Vales perto de você: busque por bairro, cidade, perfil e dia, veja no mapa e fale direto com os líderes pelo WhatsApp."
+>
+  <h1 class="sr-only">iGrupos: encontre um pequeno grupo perto de você</h1>
+
+  <section id="explorar" aria-label="Encontrar um iGrupo" class="scroll-mt-20 bg-canvas pt-24 pb-secao lg:pb-secao-lg">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <IgruposExplorer client:only="react" />
+      <noscript>
+        <p class="rounded-xl border border-border bg-surface p-4 text-sm text-ink-muted">
+          O mapa e a busca precisam de JavaScript. Veja a lista completa abaixo e chame a gente em <a class="font-bold text-accent-text underline" href="/contato">Contato</a> para falar com os líderes.
+        </p>
+        <ul class="mt-4 grid gap-3 md:grid-cols-2">
+          {
+            IGRUPOS.map((g) => (
+              <li class="rounded-xl border border-border bg-canvas p-4">
+                <p class="text-xs font-bold tracking-wide text-accent-text uppercase">{g.perfil} · {localDoGrupo(g)}</p>
+                <p class="mt-1 text-lg font-bold text-ink">{g.nome}</p>
+                <p class="text-sm text-ink-muted">{quandoReune(g)}</p>
+                <p class="text-sm text-ink-muted">{g.endereco}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </noscript>
+    </div>
+  </section>
+
+  <Section
+    id="nao-achou"
+    tom="elevado"
+    alinhamento="centro"
+    eyebrow="Não achou um grupo perto?"
+    titulo="A gente te ajuda a encontrar"
+    subtitulo="Conte onde você mora e qual dia fica melhor. Se ainda não há um iGrupo na sua região, vamos caminhar com você para abrir um."
+  >
+    <div class="flex justify-center">
+      <Button href="/contato">Falar com a equipe</Button>
+    </div>
+  </Section>
+</BaseLayout>

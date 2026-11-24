@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const PUBLIC_ROUTES = ['/', '/sobre/', '/ministerios/', '/voluntariado/', '/ofertar/', '/contato/', '/membros/'] as const;
+const PUBLIC_ROUTES = ['/', '/sobre/', '/ministerios/', '/voluntariado/', '/ofertar/', '/contato/', '/membros/', '/igrupos/'] as const;
 
 export const GET: APIRoute = ({ site }) => {
   const baseUrl = site ?? new URL('https://igrejadosvales.com.br');

@@ -1,0 +1,28 @@
+/* Mapa dos iGrupos: o Leaflet traz o CSS dele; aqui só o visual da marca. */
+.igrupos-mapa { background: #fff; font-family: inherit; }
+.igrupos-mapa .leaflet-tile-pane { filter: grayscale(1) contrast(0.7) brightness(1.28); }
+.igrupos-mapa .leaflet-container { font-family: inherit; }
+.igrupos-mapa .leaflet-control-attribution { font-size: 0.7rem; color: var(--color-ink-muted, #595445); }
+.igrupos-mapa .leaflet-control-attribution a { color: var(--color-accent-text, #1d5fd6); }
+.igrupos-mapa .leaflet-bar a { color: var(--color-ink, #2e2c24); }
+.igrupos-mapa .leaflet-popup-content-wrapper { border-radius: 0.75rem; color: var(--color-ink, #2e2c24); }
+.igrupos-mapa .leaflet-popup-content { margin: 0.75rem 1rem; font-size: 0.85rem; line-height: 1.35; }
+.igrupos-mapa .leaflet-popup-content strong { display: block; font-size: 0.95rem; }
+.igrupos-mapa .leaflet-popup-content span { color: var(--color-ink-muted, #595445); }
+
+.igrupo-pin { background: none; border: 0; }
+.igrupo-pin__corpo {
+  position: relative; display: grid; place-items: center; width: 36px; height: 36px;
+  background: var(--pin); border: 3px solid #fff; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); box-shadow: 0 3px 8px rgb(0 0 0 / 0.35);
+  transition: transform 0.2s ease;
+}
+.igrupo-pin__corpo svg { width: 16px; height: 16px; transform: rotate(45deg); fill: #fff; }
+.igrupo-pin:hover .igrupo-pin__corpo,
+.igrupo-pin:focus-visible .igrupo-pin__corpo { transform: rotate(-45deg) scale(1.12); }
+.igrupo-pin--ativo .igrupo-pin__corpo { transform: rotate(-45deg) scale(1.3); outline: 3px solid var(--color-focus, #2e2c24); outline-offset: 2px; }
+.igrupo-pin:focus-visible { outline: none; }
+.igrupo-pin:focus-visible .igrupo-pin__corpo { outline: 3px solid var(--color-focus, #2e2c24); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .igrupo-pin__corpo { transition: none; } }
+.igrupo-dica { border-radius: 0.5rem; border: 0; padding: 0.4rem 0.65rem; font-size: 0.8rem; color: var(--color-ink, #2e2c24); box-shadow: 0 4px 12px rgb(0 0 0 / 0.2); }
+.igrupo-dica strong { display: block; }
