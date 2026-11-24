@@ -1,45 +1,54 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Picture } from 'astro:assets';
+import fotoHero from '../assets/images/ministerios-hero.png';
+import fotoNext from '../assets/images/ministerios/next.png';
+import fotoOutside from '../assets/images/ministerios.jpg';
+import fotoEnraizadas from '../assets/images/ministerios/enraizadas.png';
+import fotoForjados from '../assets/images/ministerios/forjados.png';
+import { schemaBreadcrumb } from '../lib/igreja';
 import HeroImersivo from '../components/ui/HeroImersivo.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
 
-// Imagens provisórias: serão substituídas pelas fotos específicas de cada ministério.
+// Fotos em src/assets (astro:assets). A do Outside ainda é provisória (foto geral de ministérios).
 const ministerios = [
   {
     nome: 'Next',
     publico: 'Adolescentes',
     descricao: 'Um espaço para adolescentes crescerem na fé, construírem amizades e descobrirem seu propósito.',
-    imagem: '/images/ministerios/next.png',
+    imagem: fotoNext,
     href: 'https://www.instagram.com/next.ivales/',
   },
   {
     nome: 'Outside',
     publico: 'Jovens',
     descricao: 'Uma comunidade de jovens para viver o evangelho, cultivar relacionamentos e impactar o mundo.',
-    imagem: '/images/ministerios.jpg',
+    imagem: fotoOutside,
     href: 'https://www.instagram.com/outside.ivales/',
   },
   {
     nome: 'Enraizadas',
     publico: 'Mulheres',
     descricao: 'Mulheres fortalecidas em Deus, conectadas umas às outras e prontas para florescer em cada estação.',
-    imagem: '/images/ministerios/enraizadas.png',
+    imagem: fotoEnraizadas,
     href: '/contato',
   },
   {
     nome: 'Forjados',
     publico: 'Homens',
     descricao: 'Homens sendo formados para liderar com fé, caráter e propósito dentro e fora da igreja.',
-    imagem: '/images/ministerios/forjados.png',
+    imagem: fotoForjados,
     href: '/contato',
   },
 ] as const;
 ---
 
 <BaseLayout
-  title="Ministérios"
-  description="Conheça os ministérios da Igreja dos Vales e encontre um lugar para servir com seus dons."
+  title="Ministérios para jovens, mulheres e homens"
+  description="Next (adolescentes), Outside (jovens), Enraizadas (mulheres) e Forjados (homens): conheça os ministérios da Igreja dos Vales em Gravataí e Porto Alegre."
+  schema={[schemaBreadcrumb('Ministérios', '/ministerios')]}
+  socialImage={fotoHero}
   headerTransparente
 >
   <HeroImersivo
@@ -48,10 +57,8 @@ const ministerios = [
     texto="Cada pessoa tem dons, histórias e talentos que podem abençoar outras vidas. Conheça nossas áreas e caminhe com a gente."
     alinhamento="centro"
     imagem={{
-      src: '/images/ministerios-hero.png',
+      src: fotoHero,
       alt: 'Homem falando ao microfone em um encontro da Igreja dos Vales',
-      width: 1672,
-      height: 941,
     }}
   >
     <Button href="#ministerios">Conheça os ministérios</Button>
@@ -71,11 +78,14 @@ const ministerios = [
             class="ministerio-card group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[1.25rem] border border-border bg-[#1a1a1a] text-left text-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-accent/50 hover:shadow-xl motion-reduce:transition-none"
             style={`--card-delay: ${indice * 120}ms`}
           >
-            <img
+            <Picture
               src={ministerio.imagem}
-              alt={`Imagem provisória do ministério ${ministerio.nome}`}
-              width="800"
-              height="533"
+              alt={`Ministério ${ministerio.nome} da Igreja dos Vales, para ${ministerio.publico.toLowerCase()}`}
+              widths={[480, 720, 960]}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              formats={['avif', 'webp']}
+              fallbackFormat="jpg"
+              quality={70}
               loading="lazy"
               decoding="async"
               class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none"

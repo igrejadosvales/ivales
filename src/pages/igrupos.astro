@@ -4,11 +4,27 @@ import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
 import IgruposExplorer from '../components/islands/igrupos/IgruposExplorer';
 import { IGRUPOS, localDoGrupo, quandoReune } from '../lib/igrupos';
+import { schemaBreadcrumb } from '../lib/igreja';
+
+// Lista dos grupos para o Google. Só nome, bairro, cidade e quando: sem rua nem telefone dos líderes.
+const schemaIgrupos = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'iGrupos da Igreja dos Vales',
+  numberOfItems: IGRUPOS.length,
+  itemListElement: IGRUPOS.map((g, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: `iGrupo ${g.nome}`,
+    description: `${g.perfil} · ${localDoGrupo(g)} · ${quandoReune(g)}`,
+  })),
+});
 ---
 
 <BaseLayout
-  title="iGrupos"
-  description="Encontre um iGrupo da Igreja dos Vales perto de você: busque por bairro, cidade, perfil e dia, veja no mapa e fale direto com os líderes pelo WhatsApp."
+  title="iGrupos: pequenos grupos nas casas"
+  description="Encontre um iGrupo perto de você em Porto Alegre, Canoas, Alvorada ou Glorinha: busque por bairro, perfil e dia e fale com os líderes no WhatsApp."
+  schema={[schemaBreadcrumb('iGrupos', '/igrupos'), schemaIgrupos()]}
 >
   <section class="bg-canvas pt-20 pb-6 lg:pt-24">
     <h1 class="hero-entrada hero-entrada-1 px-4 text-center text-hero text-ink sm:px-6 lg:px-8">iGrupos</h1>

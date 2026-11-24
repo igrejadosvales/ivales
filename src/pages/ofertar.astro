@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { schemaBreadcrumb } from '../lib/igreja';
 import Section from '../components/ui/Section.astro';
 import Container from '../components/ui/Container.astro';
 import Button from '../components/ui/Button.astro';
@@ -7,8 +8,9 @@ import Card from '../components/ui/Card.astro';
 ---
 
 <BaseLayout
-  title="Ofertar"
-  description="Contribua com a missão da Igreja dos Vales e ajude a transformar vidas."
+  title="Ofertar: dízimos e ofertas"
+  description="Contribua com dízimos e ofertas para a missão da Igreja dos Vales e ajude a transformar vidas em Gravataí, Porto Alegre e região."
+  schema={[schemaBreadcrumb('Ofertar', '/ofertar')]}
 >
   <section class="bg-canvas py-secao lg:py-secao-lg">
     <Container>

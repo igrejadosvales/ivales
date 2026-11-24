@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/voluntarios", "destination": "/voluntariado", "permanent": true },
+    { "source": "/contact", "destination": "/contato", "permanent": true },
+    { "source": "/biblia", "destination": "/", "permanent": true },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.ivales.org" }],
+      "destination": "https://ivales.org/:path*",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "(?<sub>.*)\\.vercel\\.app" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/membros",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
+  ]
+}

@@ -27,7 +27,9 @@ npm run dev          # http://localhost:4321  (vitrine de componentes: /design)
 | `npm run test:e2e` | Playwright: menu mobile, navegação por teclado, vitrine e fluxo de voluntariado. Sobe o `astro dev` na porta 4399 e para só o que ele mesmo subiu. Nunca usa a 4321. Se já houver servidor na 4399, reusa e não para. |
 | `npm run build` | Gera `dist/` estático. Não inclui `/design`. |
 | `npm run check:external` | Confere se `dist/` tenta carregar ou enviar algo a domínio externo (lista de casos abaixo) |
-| `npm run verify` | `check` + `test` + `build` + `check:external` (suíte base) |
+| `npm run check:budget` | Peso de CSS/JS por página e "página estática sem JS" |
+| `npm run check:seo` | Título, description, um `<h1>`, canonical em `https://ivales.org`, og:image, JSON-LD válido e sitemap coerente (ver `docs/seo.md`) |
+| `npm run verify` | `check` + `test` + `build` + `check:external` + `check:budget` + `check:seo` |
 
 Para os testes e2e, rode `npx playwright install chromium` uma vez por máquina.
 
@@ -65,7 +67,7 @@ public/placeholders/    imagens e vídeo de exemplo locais
 
 Varre todo arquivo de texto do `dist/`: `html`, `htm`, `svg`, `css`, `js`, `mjs`, `cjs`, `json`, `xml`, `txt` e `webmanifest`. Binários (fontes, imagens) não têm texto de referência; o caminho que os referencia já é verificado.
 
-**Exceção declarada:** o mapa de `/igrupos` (Leaflet) carrega tiles de `tile.openstreetmap.org`, citado só em strings de JS (`HOSTS_PERMITIDOS_NO_JS`). HTML e CSS continuam sem domínio externo. O mapa é um chunk `import()` carregado sob demanda, com teto próprio no `check:budget` (`ORCAMENTO_JS_LAZY_GZIP`). As coordenadas dos grupos em `src/lib/igrupos.ts` são aproximadas (centro do bairro) de propósito.
+**Exceção declarada:** o mapa de `/igrupos` (Leaflet) carrega tiles de `tile.openstreetmap.org`, citado só em strings de JS (`HOSTS_PERMITIDOS_NO_JS`, que também aceita os links de atribuição e o `wa.me` dos líderes, que são só navegação). O próprio domínio (`ivales.org`), os namespaces XML e o corpo de JSON-LD não contam como externos. HTML e CSS continuam sem domínio externo. O mapa é um chunk `import()` carregado sob demanda, com teto próprio no `check:budget` (`ORCAMENTO_JS_LAZY_GZIP`). As coordenadas dos grupos em `src/lib/igrupos.ts` são aproximadas (centro do bairro) de propósito.
 
 Casos cobertos, cada um com fixture em `scripts/check-no-external.test.ts`:
 
@@ -83,7 +85,9 @@ Limite conhecido: o JS só é verificado por strings literais. Uma URL montada p
 ## Limitações conhecidas
 
 - Os links do menu apontam para páginas que só existem a partir da fase 2 (`/sobre`, `/cultos` etc.). Até lá, dão 404.
-- Em build estático sem adapter, os `redirects` viram redirecionamento por `<meta http-equiv="refresh">` (status 200). O status 301 real depende de adapter ou de regra no host, decidido na fase 2 junto com o teste de status.
+- Os redirects antigos (`/voluntarios`, `/contact`, `/biblia`) são 301 reais pelo `vercel.json`. As páginas de `<meta http-equiv="refresh">` geradas pelo Astro ficam só como plano B fora da Vercel.
+- Domínio oficial: `https://ivales.org` (`SITE_URL` em `src/lib/igreja.ts`). O build gera `sobre.html` e a Vercel serve `/sobre` (`cleanUrls`). Todo `*.vercel.app` recebe `X-Robots-Tag: noindex`.
+- Locais, horários dos cultos e redes sociais vêm só de `src/lib/igreja.ts`. Estratégia e tarefas fora do código: `docs/seo.md`.
 - Os textos de endereço e telefone no rodapé estão marcados como "[a confirmar]".
 - **Voluntariado:** o formulário valida no navegador e monta um resumo, mas nada é enviado nem armazenado pelo site. No fim, a pessoa abre o WhatsApp e envia a mensagem. O número `(11) 99999-9999` é provisório e deve ser trocado em `src/lib/voluntariado.ts` (`WHATSAPP_VOLUNTARIADO`) antes de publicar. O caminho "Já sou voluntário" em `/voluntariado` ainda é um aviso de "em breve"; o cadastro novo é o fluxo completo.
 

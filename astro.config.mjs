@@ -13,17 +13,21 @@ const devOnlyPages = {
     'astro:build:done': async ({ dir }) => {
       for (const page of DEV_ONLY_PAGES) {
         await rm(new URL(`${page}/`, dir), { recursive: true, force: true });
+        await rm(new URL(`${page}.html`, dir), { force: true });
       }
     },
   },
 };
 
 export default defineConfig({
-  site: 'https://igrejadosvales.com.br',
+  site: 'https://ivales.org',
   output: 'static',
-  // Rotas antigas do site atual (seção 5 do plano v2).
-  // Em build estático sem adapter o Astro gera redirecionamento por meta refresh
-  // (status 200). O status 301 real precisa de adapter ou de regra no host (fase 2).
+  // URLs sem barra no final (/sobre), iguais aos links internos e ao canonical.
+  // O build gera sobre.html e a Vercel serve como /sobre (cleanUrls no vercel.json).
+  trailingSlash: 'never',
+  build: { format: 'file' },
+  // Rotas antigas do site anterior. Na Vercel o 301 real vem do vercel.json; estas páginas de
+  // meta refresh ficam só como plano B para outros hosts.
   redirects: {
     '/voluntarios': { status: 301, destination: '/voluntariado' },
     '/contact': { status: 301, destination: '/contato' },

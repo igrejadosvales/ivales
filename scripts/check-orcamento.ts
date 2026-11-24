@@ -7,7 +7,7 @@
 // - Página estática (fora de PAGINAS_COM_ILHA): nenhum <astro-island>, nenhum <script src> e nenhum
 //   <script> inline, exceto JSON-LD e os scripts de melhoria progressiva da lista SCRIPTS_PERMITIDOS
 //   (marcados com data-script="..."). O menu mobile funciona sem JS; o script dele só acrescenta Escape.
-//   O do cabeçalho só troca o fundo ao rolar.
+//   O do cabeçalho só troca o fundo ao rolar. O da home só anima a entrada das seções (sem JS elas aparecem).
 // - Página com ilha: soma o JS das ilhas (component-url, renderer-url e os imports estáticos deles) e
 //   avisa o total; falha acima de ORCAMENTO_JS_ILHA_GZIP.
 
@@ -22,7 +22,7 @@ export const ORCAMENTO_JS_ILHA_GZIP = 140 * 1024;
 // separado do JS inicial, e só contam nas rotas de PAGINAS_COM_LAZY.
 export const ORCAMENTO_JS_LAZY_GZIP = 250 * 1024;
 export const PAGINAS_COM_LAZY = ['igrupos'];
-export const SCRIPTS_PERMITIDOS = ['menu-mobile', 'header-scroll'];
+export const SCRIPTS_PERMITIDOS = ['menu-mobile', 'header-scroll', 'home-secoes'];
 // Rotas (relativas ao dist/, sem barra final) que podem ter ilha.
 export const PAGINAS_COM_ILHA = ['design', 'contato', 'voluntariado', 'membros', 'igrupos'];
 
@@ -142,7 +142,8 @@ async function principal(pasta: string): Promise<number> {
   const falhas: string[] = [];
   for (const pagina of paginas.sort()) {
     const html = await readFile(pagina, 'utf8');
-    const rota = relative(pasta, dirname(pagina)) || '/';
+    // Aceita os dois formatos de build: sobre/index.html e sobre.html (build.format 'file').
+    const rota = relative(pasta, pagina).replace(/\\/g, '/').replace(/(^|\/)index\.html$/, '').replace(/\.html$/, '') || '/';
     // Redirecionamento estático (meta refresh) não tem layout nem CSS.
     if (/<meta http-equiv="refresh"/i.test(html) && !/<main\b/i.test(html)) continue;
 
@@ -155,7 +156,7 @@ async function principal(pasta: string): Promise<number> {
       const ilha = await jsDaIlha(pasta, urlsDeIlha(html));
       console.log(`${rota}: CSS ${kb(cssGzip)} gzip; JS das ilhas ${kb(ilha.gzip)} gzip (${ilha.arquivos.length} arquivos)`);
       if (PAGINAS_COM_LAZY.includes(rota)) {
-        console.log(`${rota}: JS sob demanda (mapa e 3D) ${kb(ilha.lazyGzip)} gzip`);
+        console.log(`${rota}: JS sob demanda (mapa) ${kb(ilha.lazyGzip)} gzip`);
         if (ilha.lazyGzip > ORCAMENTO_JS_LAZY_GZIP) falhas.push(`${rota}: JS sob demanda ${kb(ilha.lazyGzip)} gzip > ${kb(ORCAMENTO_JS_LAZY_GZIP)}`);
       }
       if (ilha.gzip > ORCAMENTO_JS_ILHA_GZIP) falhas.push(`${rota}: JS ${kb(ilha.gzip)} gzip > ${kb(ORCAMENTO_JS_ILHA_GZIP)}`);

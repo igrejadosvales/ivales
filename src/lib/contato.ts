@@ -1,9 +1,12 @@
 import { emailValido, formatarTelefone, montarLinkWhatsApp, telefoneValido } from './voluntariado';
 
+import { enderecoCurto, localPorId } from './igreja';
+
+// PENDENTE: WhatsApp/telefone e e-mail ainda são provisórios (ver docs/seo.md). Não vão para o JSON-LD.
 export const WHATSAPP_CONTATO = '5511999999999';
 export const EMAIL_CONTATO = 'contato@igrejadosvales.com';
 export const TELEFONE_EXIBICAO = '(11) 99999-9999';
-export const ENDERECO_CONTATO = 'Rua Santa Clara, 192 - Gravataí';
+export const ENDERECO_CONTATO = enderecoCurto(localPorId('gravatai'));
 
 export type AssuntoContato =
   | 'primeira-visita'

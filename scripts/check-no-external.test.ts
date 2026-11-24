@@ -210,3 +210,31 @@ describe('despacho por extensão', () => {
     expect(encontrarReferencias('fonte.woff2', 'https://exemplo.com/nao-lido')).toEqual([]);
   });
 });
+
+describe('próprio domínio, JSON-LD e tiles do mapa', () => {
+  it('URL do próprio site (ivales.org) não é terceiro', () => {
+    expect(encontrarNoTexto('<loc>https://ivales.org/sobre</loc>')).toEqual([]);
+    expect(encontrarNoHtml('<img src="https://ivales.org/images/a.jpg">')).toEqual([]);
+  });
+
+  it('subdomínio parecido não passa', () => {
+    expect(urls(encontrarNoHtml('<img src="https://ivales.org.exemplo.com/a.jpg">'))).toEqual([
+      'https://ivales.org.exemplo.com/a.jpg',
+    ]);
+  });
+
+  it('corpo de <script type="application/ld+json"> é dado, não carregamento', () => {
+    expect(
+      encontrarNoHtml('<script type="application/ld+json">{"sameAs":["https://www.instagram.com/ivalesonline/"]}</script>'),
+    ).toEqual([]);
+  });
+
+  it('<script> comum com URL externa continua acusando', () => {
+    expect(urls(encontrarNoHtml('<script>fetch("https://exemplo.com/x")</script>'))).toEqual(['https://exemplo.com/x']);
+  });
+
+  it('JS pode citar o tile server do mapa, e só ele', () => {
+    expect(encontrarNoJs('L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png")')).toEqual([]);
+    expect(encontrarNoJs('"https://outro.openstreetmap.org/a"')).toHaveLength(1);
+  });
+});

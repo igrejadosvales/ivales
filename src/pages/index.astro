@@ -1,13 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import fotoHero from '../assets/images/hero.jpg';
+import fotoVoluntariado from '../assets/images/voluntariado.png';
+import fotoPequenoGrupo from '../assets/images/pequeno-grupo.jpg';
+import fotoMinisterios from '../assets/images/ministerios.jpg';
+import fotoVideo from '../assets/images/youtube.jpg';
+import { Picture } from 'astro:assets';
 import HeroImersivo from '../components/ui/HeroImersivo.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
 import Accordion from '../components/ui/Accordion.astro';
 import CartaoImagem from '../components/ui/CartaoImagem.astro';
 import CartaoIcone from '../components/ui/CartaoIcone.astro';
+import { LOCAIS, enderecoCurto, horasDoDia, localPorId, resumoCultos, schemaFaq } from '../lib/igreja';
 
-// Conteúdo da home migrado do site atual (igrejadosvales.com.br), na nossa identidade:
+// Conteúdo da home migrado do site antigo, na nossa identidade:
 // creme, azul, DM Sans e os componentes do design system.
 
 const envolvimento = [
@@ -16,10 +23,8 @@ const envolvimento = [
     texto: 'Participe da missão de promover o evangelho servindo em um time de voluntários.',
     href: '/voluntariado',
     imagem: {
-      src: '/images/voluntariado.png',
+      src: fotoVoluntariado,
       alt: 'Dois voluntários sorrindo durante uma ação da igreja',
-      width: 734,
-      height: 890,
     },
   },
   {
@@ -27,10 +32,8 @@ const envolvimento = [
     texto: 'Participe de um pequeno grupo de discipulado para aprender mais sobre Jesus e sua vontade.',
     href: '/igrupos',
     imagem: {
-      src: '/images/pequeno-grupo.jpg',
+      src: fotoPequenoGrupo,
       alt: 'Dois jovens sorrindo juntos em um evento da Igreja dos Vales',
-      width: 800,
-      height: 533,
     },
   },
   {
@@ -38,10 +41,8 @@ const envolvimento = [
     texto: 'Descubra os ministérios da igreja e encontre um lugar para servir com seus dons.',
     href: '/ministerios',
     imagem: {
-      src: '/images/ministerios.jpg',
+      src: fotoMinisterios,
       alt: 'Dois jovens sorrindo em um evento da Igreja dos Vales',
-      width: 800,
-      height: 533,
     },
   },
 ] as const;
@@ -55,7 +56,7 @@ const perguntas = [
   {
     pergunta: 'Quais são os horários dos cultos?',
     resposta:
-      'Nossos cultos acontecem todos os domingos às 10h e às 18h. Também temos cultos de oração às terças-feiras às 20h e cultos de jovens aos sábados às 19h30.',
+      `Temos cultos ${resumoCultos()}. Os horários e endereços completos estão na página de Contato.`,
   },
   {
     pergunta: 'A igreja possui ministério infantil?',
@@ -70,14 +71,16 @@ const perguntas = [
   {
     pergunta: 'Onde a igreja está localizada?',
     resposta:
-      'Estamos localizados na Rua Santa Clara, 192 - Gravataí. Temos estacionamento próprio e fácil acesso por transporte público.',
+      `Estamos em dois lugares: ${LOCAIS.map(enderecoCurto).join(' e ')}. Os dois têm fácil acesso por transporte público.`,
   },
 ] as const;
 ---
 
 <BaseLayout
-  title="Igreja dos Vales"
-  description="Igreja dos Vales: um lugar de fé, esperança e amor. Cultos, iGrupos, voluntariado e mensagens."
+  title="Igreja dos Vales | Igreja em Gravataí e Porto Alegre"
+  description="Igreja dos Vales em Gravataí e Porto Alegre (Sarandi): cultos aos domingos e quartas, iGrupos nas casas e ministérios para toda a família."
+  schema={[schemaFaq(perguntas)]}
+  socialImage={fotoHero}
   headerTransparente
 >
   <HeroImersivo
@@ -85,11 +88,8 @@ const perguntas = [
     titulo="Igreja dos Vales"
     texto="Um lugar de fé, esperança e amor. Junte-se a nós para adorar e servir."
     imagem={{
-      src: '/images/hero.jpg',
-      srcset: '/images/hero-900.jpg 900w, /images/hero.jpg 1920w',
+      src: fotoHero,
       alt: 'Pastor sorrindo e apontando para a plateia enquanto segura um microfone, diante de um fundo azul escuro',
-      width: 1672,
-      height: 941,
     }}
   >
     <Button href="#mensagens" variante="primario">Assista ao Vivo</Button>
@@ -99,16 +99,32 @@ const perguntas = [
   <!-- Mensagens -->
   <Section id="mensagens" class="home-secao">
     <div class="grid items-center gap-10 lg:grid-cols-2">
-      <div class="aspect-video overflow-hidden rounded-cartao border border-border bg-canvas">
-        <iframe
-          src="https://www.youtube.com/embed/PRPB9Ay8Ysk"
-          title="Último culto online"
+      <!-- Capa local com link para o YouTube: nenhum iframe de terceiro no carregamento da página. -->
+      <a
+        href="https://www.youtube.com/watch?v=PRPB9Ay8Ysk"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group relative block aspect-video overflow-hidden rounded-cartao border border-border bg-black"
+        aria-label="Assistir no YouTube: Preparando o relacionamento, último culto online"
+      >
+        <Picture
+          src={fotoVideo}
+          alt=""
+          widths={[480, 720, 960, 1280]}
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          formats={['avif', 'webp']}
+          fallbackFormat="jpg"
+          quality={70}
           loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-          class="h-full w-full border-0"
-        ></iframe>
-      </div>
+          decoding="async"
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+        />
+        <span aria-hidden="true" class="absolute inset-0 grid place-items-center bg-black/20 transition-colors group-hover:bg-black/10">
+          <span class="grid size-16 place-items-center rounded-full bg-accent text-on-accent shadow-lg transition-transform group-hover:scale-110 motion-reduce:transition-none">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ml-1 size-7"><path d="M8 5v14l11-7z" /></svg>
+          </span>
+        </span>
+      </a>
 
       <div>
         <p class="text-sm font-semibold tracking-wide text-accent-text uppercase">Mensagens</p>
@@ -136,8 +152,9 @@ const perguntas = [
     <div class="grid gap-8 text-left md:grid-cols-3">
       <div class="border-t-2 border-accent pt-5">
         <h3 class="text-xl font-bold text-ink">Cultos de domingo</h3>
-        <p class="mt-3 text-lg text-ink-muted">10h, 17h e 20h</p>
-        <p class="mt-1 text-ink-muted">Em Porto Alegre, às 19h.</p>
+        <p class="mt-3 text-lg text-ink-muted">Gravataí: {horasDoDia(localPorId('gravatai'), 'Domingo')}</p>
+        <p class="mt-1 text-ink-muted">Porto Alegre (Sarandi): {horasDoDia(localPorId('porto-alegre'), 'Domingo')}.</p>
+        <p class="mt-1 text-ink-muted">Quartas às 20h nos dois lugares.</p>
       </div>
       <div class="border-t-2 border-accent pt-5">
         <h3 class="text-xl font-bold text-ink">Conheça as extensões</h3>
@@ -310,8 +327,8 @@ const perguntas = [
   </Section>
 </BaseLayout>
 
-<script>
-  const secoes = document.querySelectorAll<HTMLElement>('.home-secao');
+<script is:inline data-script="home-secoes">
+  const secoes = document.querySelectorAll('.home-secao');
 
   if ('IntersectionObserver' in window) {
     const observador = new IntersectionObserver(

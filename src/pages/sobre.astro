@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import fotoHero from '../assets/images/sobre-hero.png';
+import { schemaBreadcrumb } from '../lib/igreja';
 import HeroImersivo from '../components/ui/HeroImersivo.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
@@ -28,8 +30,10 @@ const identidade = [
 ---
 
 <BaseLayout
-  title="Sobre"
-  description="Conheça a Igreja dos Vales: quem somos, nossa visão, missão, valores e propósitos."
+  title="Quem somos: visão, missão e valores"
+  description="Conheça a Igreja dos Vales, igreja família em Gravataí e Porto Alegre: quem somos, nossa visão, missão, valores e propósitos."
+  schema={[schemaBreadcrumb('Sobre', '/sobre')]}
+  socialImage={fotoHero}
   headerTransparente
 >
   <HeroImersivo
@@ -38,10 +42,8 @@ const identidade = [
     texto="Uma família para você pertencer. Conheça quem somos, nossos valores e o que cremos."
     alinhamento="centro"
     imagem={{
-      src: '/images/sobre-hero.png',
+      src: fotoHero,
       alt: 'Duas pessoas apresentando uma programação durante um encontro da Igreja dos Vales',
-      width: 1672,
-      height: 941,
     }}
   >
     <Button href="#identidade">Conheça quem somos</Button>

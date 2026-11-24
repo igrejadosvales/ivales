@@ -240,9 +240,12 @@
   }
 }
 
-.home-secao {
-  opacity: 0;
-  transform: translateY(1.5rem);
+/* Só esconde quando há JavaScript para revelar depois: sem JS (ou para robôs sem JS) o conteúdo aparece. */
+@media (scripting: enabled) {
+  .home-secao {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
 }
 
 .home-secao-visivel {

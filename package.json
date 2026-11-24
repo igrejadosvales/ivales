@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "check:external": "tsx scripts/check-no-external.ts dist",
     "check:budget": "tsx scripts/check-orcamento.ts dist",
-    "verify": "npm run check && npm test && npm run build && npm run check:external && npm run check:budget"
+    "verify": "npm run check && npm test && npm run build && npm run check:external && npm run check:budget && npm run check:seo",
+    "check:seo": "tsx scripts/check-seo.ts dist"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

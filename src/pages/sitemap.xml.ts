@@ -1,10 +1,15 @@
 import type { APIRoute } from 'astro';
+import { SITE_URL } from '../lib/igreja';
 
-const PUBLIC_ROUTES = ['/', '/sobre/', '/ministerios/', '/voluntariado/', '/ofertar/', '/contato/', '/membros/', '/igrupos/'] as const;
+// Só páginas públicas e indexáveis. /membros (área logada) e /design (só dev) ficam de fora.
+export const ROTAS_DO_SITEMAP = ['/', '/sobre', '/ministerios', '/igrupos', '/voluntariado', '/ofertar', '/contato'] as const;
 
 export const GET: APIRoute = ({ site }) => {
-  const baseUrl = site ?? new URL('https://igrejadosvales.com.br');
-  const urls = PUBLIC_ROUTES.map((route) => `  <url><loc>${new URL(route, baseUrl).toString()}</loc></url>`).join('\n');
+  const baseUrl = site ?? new URL(SITE_URL);
+  const hoje = new Date().toISOString().slice(0, 10);
+  const urls = ROTAS_DO_SITEMAP.map(
+    (rota) => `  <url><loc>${new URL(rota, baseUrl).toString()}</loc><lastmod>${hoje}</lastmod></url>`,
+  ).join('\n');
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 
   return new Response(body, {

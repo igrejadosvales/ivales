@@ -15,6 +15,9 @@
 // - JS: strings literais com URL externa (não rastreia URL montada por concatenação).
 // - Texto (json, xml, txt, webmanifest): URLs http(s)/ws(s)/ftp e "//host" entre aspas.
 //
+// Também não conta: o próprio domínio do site (DOMINIOS_PROPRIOS, ex.: canonical e sitemap) e o corpo de
+// <script type="application/ld+json">, que é dado para buscadores e não é carregado pelo navegador.
+//
 // Exceção declarada: o mapa de /igrupos carrega tiles do OpenStreetMap (HOSTS_PERMITIDOS_NO_JS, só em
 // strings de JS; HTML e CSS continuam sem nenhum domínio externo).
 //
@@ -75,12 +78,12 @@ function normalizarUrl(url: string): string {
 
 function ehExterna(url: string): boolean {
   const u = normalizarUrl(url);
-  return /^(https?|wss?|ftp):/i.test(u) || /^[\\/]{2}/.test(u);
+  return (/^(https?|wss?|ftp):/i.test(u) || /^[\\/]{2}/.test(u)) && !ehDominioProprio(u);
 }
 
 // Namespace XML/SVG: identificador, não carrega nada. Só vale fora de atributos de recurso.
 function ehNamespace(url: string): boolean {
-  return /^https?:\/\/www\.w3\.org\//i.test(normalizarUrl(url));
+  return /^https?:\/\/www\.(w3|sitemaps)\.org\//i.test(normalizarUrl(url));
 }
 
 export function encontrarNoCss(css: string, origem = 'css'): Achado[] {
@@ -117,8 +120,21 @@ function ehTextoDeErroDoReact(url: string): boolean {
   return normalizarUrl(url) === 'https://react.dev/errors/';
 }
 
+// Domínio do próprio site: URL absoluta para ele não é terceiro.
+export const DOMINIOS_PROPRIOS = ['ivales.org', 'www.ivales.org'];
+
+function ehDominioProprio(url: string): boolean {
+  try {
+    return DOMINIOS_PROPRIOS.includes(new URL(normalizarUrl(url)).hostname);
+  } catch {
+    return false;
+  }
+}
+
 // Hosts que o JS pode citar. Só o tile server do mapa de /igrupos; ver o cabeçalho do arquivo.
-export const HOSTS_PERMITIDOS_NO_JS = ['tile.openstreetmap.org'];
+// Também os links que só viram <a href> (navegação do usuário, nada é carregado): atribuição do mapa
+// (Leaflet/OSM) e o link do WhatsApp dos líderes, montados dentro do JS da ilha.
+export const HOSTS_PERMITIDOS_NO_JS = ['tile.openstreetmap.org', 'www.openstreetmap.org', 'leafletjs.com', 'wa.me'];
 
 function ehHostPermitidoNoJs(url: string): boolean {
   try {
@@ -160,7 +176,7 @@ export function encontrarNoHtml(html: string): Achado[] {
   // Corpo de <style> e <script> vai para o verificador de CSS/JS; a tag fica para a varredura de atributos.
   const restante = semComentarios.replace(BLOCO_BRUTO, (_bloco, nome: string, atributos: string, corpo: string) => {
     if (nome.toLowerCase() === 'style') achados.push(...encontrarNoCss(corpo, '<style>'));
-    else achados.push(...encontrarNoJs(corpo, '<script> inline'));
+    else if (!/\btype\s*=\s*["']?application\/ld\+json/i.test(atributos)) achados.push(...encontrarNoJs(corpo, '<script> inline'));
     return `<${nome}${atributos}></${nome}>`;
   });
 

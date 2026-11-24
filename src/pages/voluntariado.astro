@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import fotoHero from '../assets/images/voluntariado-hero.png';
+import { schemaBreadcrumb } from '../lib/igreja';
 import HeroImersivo from '../components/ui/HeroImersivo.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
@@ -14,8 +16,10 @@ const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
 ---
 
 <BaseLayout
-  title="Voluntariado"
-  description="Sirva com propósito na Igreja dos Vales. Descubra onde seus dons se encaixam e faça parte de uma equipe."
+  title="Voluntariado: sirva com seus dons"
+  description="Seja voluntário na Igreja dos Vales em Gravataí ou Porto Alegre: descubra onde seus dons se encaixam e faça parte de uma equipe."
+  schema={[schemaBreadcrumb('Voluntariado', '/voluntariado')]}
+  socialImage={fotoHero}
   headerTransparente
 >
   <HeroImersivo
@@ -24,10 +28,8 @@ const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
     texto="Cada talento importa. Descubra onde você se encaixa e use seus dons para servir à igreja e à comunidade."
     alinhamento="centro"
     imagem={{
-      src: '/images/voluntariado-hero.png',
+      src: fotoHero,
       alt: 'Voluntárias conversando entre as cadeiras de uma celebração da Igreja dos Vales',
-      width: 1672,
-      height: 941,
     }}
   >
     <Button href="#caminhos">Quero servir</Button>

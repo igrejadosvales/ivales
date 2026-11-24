@@ -6,19 +6,16 @@ import Card from '../components/ui/Card.astro';
 import Chip from '../components/ui/Chip.astro';
 import Accordion from '../components/ui/Accordion.astro';
 import FormularioContato from '../components/islands/FormularioContato';
-import {
-  EMAIL_CONTATO,
-  ENDERECO_CONTATO,
-  TELEFONE_EXIBICAO,
-  WHATSAPP_CONTATO,
-} from '../lib/contato';
+import { EMAIL_CONTATO, TELEFONE_EXIBICAO, WHATSAPP_CONTATO } from '../lib/contato';
+import { LOCAIS, enderecoCurto, linkComoChegar, schemaBreadcrumb, textoHorarios } from '../lib/igreja';
 
 const whatsappBase = `https://wa.me/${WHATSAPP_CONTATO}`;
 ---
 
 <BaseLayout
-  title="Contato"
-  description="Entre em contato com a Igreja dos Vales: horários de culto, endereço, WhatsApp, pedidos de oração e atendimento pastoral."
+  title="Contato, endereços e horários dos cultos"
+  description="Endereços e horários dos cultos da Igreja dos Vales em Gravataí (Rua Santa Clara, 192) e Porto Alegre (Av. Assis Brasil, 6715, Sarandi)."
+  schema={[schemaBreadcrumb('Contato', '/contato')]}
 >
   <section class="relative overflow-hidden bg-canvas py-secao lg:py-secao-lg">
     <div
@@ -37,9 +34,9 @@ const whatsappBase = `https://wa.me/${WHATSAPP_CONTATO}`;
           Seja para planejar sua primeira visita, enviar um pedido de oração, encontrar um iGrupo ou conversar com nossa equipe pastoral, queremos caminhar ao seu lado.
         </p>
         <div class="mt-8 flex flex-wrap justify-center gap-3">
-          <Chip>Domingos às 10h e 19h</Chip>
-          <Chip>Quartas às 20h</Chip>
-          <Chip>Sábados às 19h (Jovens)</Chip>
+          <Chip>Gravataí: domingos às 10h, 17h e 20h</Chip>
+          <Chip>Porto Alegre: domingos às 19h</Chip>
+          <Chip>Quartas às 20h nos dois</Chip>
         </div>
       </div>
     </Container>
@@ -48,10 +45,25 @@ const whatsappBase = `https://wa.me/${WHATSAPP_CONTATO}`;
   <Section id="canais" titulo="Canais de atendimento" eyebrow="Como nos encontrar" tom="elevado">
     <div class="grid gap-6 md:grid-cols-3">
       <Card titulo="Visite nossos cultos">
-        <p class="font-semibold text-ink">{ENDERECO_CONTATO}</p>
-        <p class="mt-2 text-sm text-ink-muted">
-          Domingos às 10h e 19h • Quarta-feira às 20h • Sábado às 19h (Jovens). Estacionamento e recepção prontos para acolher sua família.
-        </p>
+        <ul class="space-y-4">
+          {
+            LOCAIS.map((local) => (
+              <li>
+                <p class="font-semibold text-ink">{local.cidade}</p>
+                <p class="text-sm text-ink-muted">{enderecoCurto(local)}</p>
+                <p class="mt-1 text-sm text-ink-muted">{textoHorarios(local)}</p>
+                <a
+                  href={linkComoChegar(local)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mt-1 inline-flex text-sm font-bold text-accent-text underline-offset-4 hover:underline"
+                >
+                  Como chegar <span aria-hidden="true" class="ml-1">↗</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
       </Card>
 
       <Card titulo="WhatsApp e Telefone" href={whatsappBase}>

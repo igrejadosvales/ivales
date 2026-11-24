@@ -1,6 +1,8 @@
 ---
 import Container from '../ui/Container.astro';
 import { navItems } from '../../lib/navigation';
+import { LOCAIS, REDES, enderecoCurto, textoHorarios } from '../../lib/igreja';
+import { EMAIL_CONTATO, TELEFONE_EXIBICAO, WHATSAPP_CONTATO } from '../../lib/contato';
 
 const ano = new Date().getFullYear();
 const linksRapidos = [{ label: 'Início', href: '/' }, ...navItems];
@@ -19,7 +21,7 @@ const linksRapidos = [{ label: 'Início', href: '/' }, ...navItems];
         </p>
         <div class="mt-6 flex items-center gap-3">
           <a
-            href="https://www.youtube.com/@ivalesonline"
+            href={REDES.youtube}
             class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink transition-colors hover:border-border-strong"
             aria-label="Canal da Igreja dos Vales no YouTube"
           >
@@ -27,12 +29,17 @@ const linksRapidos = [{ label: 'Início', href: '/' }, ...navItems];
               <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
             </svg>
           </a>
-          <a
-            href="https://www.instagram.com/ivalesonline/"
-            class="text-sm font-semibold text-ink-muted underline-offset-4 hover:text-ink hover:underline"
-          >
-            Instagram @ivalesonline
-          </a>
+          {
+            REDES.instagram.map((rede) => (
+              <a
+                href={rede.url}
+                class="text-sm font-semibold text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+                aria-label={`Instagram @${rede.usuario}`}
+              >
+                @{rede.usuario}
+              </a>
+            ))
+          }
         </div>
       </div>
 
@@ -59,11 +66,17 @@ const linksRapidos = [{ label: 'Início', href: '/' }, ...navItems];
       <div>
         <h2 class="text-sm font-semibold text-ink">Cultos e contato</h2>
         <ul class="mt-5 grid gap-2.5 text-sm text-ink-muted">
-          <li>Domingo: 10h, 17h e 20h</li>
-          <li>Porto Alegre: 19h</li>
-          <li class="pt-2">Rua Santa Clara, 192 - Gravataí</li>
-          <li><a href="tel:+5511999999999" class="rounded-md hover:text-ink hover:underline">(11) 99999-9999</a></li>
-          <li><a href="mailto:contato@igrejadosvales.com" class="rounded-md break-all hover:text-ink hover:underline">contato@igrejadosvales.com</a></li>
+          {
+            LOCAIS.map((local) => (
+              <li>
+                <span class="block font-semibold text-ink">{local.cidade}</span>
+                <span class="block">{enderecoCurto(local)}</span>
+                <span class="block">{textoHorarios(local)}</span>
+              </li>
+            ))
+          }
+          <li class="pt-2"><a href={`tel:+${WHATSAPP_CONTATO}`} class="rounded-md hover:text-ink hover:underline">{TELEFONE_EXIBICAO}</a></li>
+          <li><a href={`mailto:${EMAIL_CONTATO}`} class="rounded-md break-all hover:text-ink hover:underline">{EMAIL_CONTATO}</a></li>
         </ul>
       </div>
     </div>
