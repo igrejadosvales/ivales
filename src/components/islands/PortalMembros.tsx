@@ -475,7 +475,7 @@ export default function PortalMembros({ demo = false }: Props) {
             role="tablist"
             aria-label="Seções da Área de Membros"
             onKeyDown={handleTabKeyDown}
-            className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1"
+            className="-mx-1 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-1"
           >
             {ABAS.map((aba) => {
               const selecionada = abaAtiva === aba.id;
@@ -500,7 +500,7 @@ export default function PortalMembros({ demo = false }: Props) {
                         : 'font-medium text-ink-muted hover:text-ink'
                   }`}
                 >
-                  {selecionada && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-accent" />}
+                  {selecionada && <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-accent" />}
                   {aba.rotulo}
                   {locked && <span className="ml-1 font-normal">· em breve</span>}
                 </button>
