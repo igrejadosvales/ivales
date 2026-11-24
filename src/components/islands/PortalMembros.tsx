@@ -27,7 +27,7 @@ const ABAS: { id: AbaPortal; rotulo: string; indisponivel?: boolean }[] = [
 ];
 
 interface Props {
-  /** Rota /membros/demo: já entra no painel com dados fictícios, sem login. */
+  /** /membros/demo route: opens the dashboard with fake data, no sign-in. */
   demo?: boolean;
 }
 
@@ -47,8 +47,8 @@ export default function PortalMembros({ demo = false }: Props) {
   const [erroAcesso, setErroAcesso] = useState('');
   const [infoAcesso, setInfoAcesso] = useState('');
   const [enviandoAcesso, setEnviandoAcesso] = useState(false);
-  // Erros por campo: aparecem abaixo do campo, e o foco vai para o primeiro com problema.
-  const [errosCampo, setErrosCampo] = useState<{ nome?: string; email?: string; senha?: string }>({});
+  // Per-field errors: shown under each field; focus moves to the first invalid one.
+  const [fieldErrors, setFieldErrors] = useState<{ nome?: string; email?: string; senha?: string }>({});
 
   // Estado do membro logado
   const [perfil, setPerfil] = useState<PerfilMembro>(PERFIL_DEMONSTRACAO);
@@ -66,31 +66,31 @@ export default function PortalMembros({ demo = false }: Props) {
 
   const grupoAtual = GRUPOS_DISPONIVEIS.find((g) => g.id === grupoAtualId) ?? GRUPOS_DISPONIVEIS[0]!;
   const proximaEscala = escalas[0];
-  // No demo tudo fica liberado; fora dele, as áreas ainda em construção aparecem como "em breve".
-  const bloqueada = (aba: { indisponivel?: boolean }) => Boolean(aba.indisponivel) && !demo;
-  const cursosInscritos = cursos.filter((c) => c.inscrito);
-  const progressoGeral = (() => {
-    const t = cursosInscritos.reduce((acc, c) => {
+  // The demo unlocks everything; outside it, sections still being built show as "em breve".
+  const isLocked = (aba: { indisponivel?: boolean }) => Boolean(aba.indisponivel) && !demo;
+  const enrolledCourses = cursos.filter((c) => c.inscrito);
+  const overallProgress = (() => {
+    const t = enrolledCourses.reduce((acc, c) => {
       const p = progressoCurso(c);
       return { feitas: acc.feitas + p.concluidas, total: acc.total + p.total };
     }, { feitas: 0, total: 0 });
     return t.total === 0 ? 0 : Math.round((t.feitas / t.total) * 100);
   })();
 
-  // Padrão de abas do WAI-ARIA: setas trocam de aba (pulando as travadas), Home/End vão às pontas.
-  function navegarAbas(e: KeyboardEvent<HTMLDivElement>) {
-    const livres = ABAS.filter((aba) => !bloqueada(aba));
-    const atual = livres.findIndex((aba) => aba.id === abaAtiva);
-    const destino =
-      e.key === 'ArrowRight' ? livres[(atual + 1) % livres.length]
-      : e.key === 'ArrowLeft' ? livres[(atual - 1 + livres.length) % livres.length]
-      : e.key === 'Home' ? livres[0]
-      : e.key === 'End' ? livres[livres.length - 1]
+  // WAI-ARIA tabs pattern: arrows move between tabs (skipping locked ones), Home/End jump to the ends.
+  function handleTabKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const unlockedTabs = ABAS.filter((aba) => !isLocked(aba));
+    const atual = unlockedTabs.findIndex((aba) => aba.id === abaAtiva);
+    const target =
+      e.key === 'ArrowRight' ? unlockedTabs[(atual + 1) % unlockedTabs.length]
+      : e.key === 'ArrowLeft' ? unlockedTabs[(atual - 1 + unlockedTabs.length) % unlockedTabs.length]
+      : e.key === 'Home' ? unlockedTabs[0]
+      : e.key === 'End' ? unlockedTabs[unlockedTabs.length - 1]
       : undefined;
-    if (!destino) return;
+    if (!target) return;
     e.preventDefault();
-    setAbaAtiva(destino.id);
-    document.getElementById(`tab-${destino.id}`)?.focus();
+    setAbaAtiva(target.id);
+    document.getElementById(`tab-${target.id}`)?.focus();
   }
 
   async function submeterAcesso(e: SyntheticEvent<HTMLFormElement>) {
@@ -101,18 +101,18 @@ export default function PortalMembros({ demo = false }: Props) {
     const email = emailAcesso.trim();
     const nome = nomeCadastro.trim();
 
-    // Valida tudo de uma vez ao enviar (o botão nunca fica desabilitado por campo vazio).
+    // Validate everything on submit (the button is never disabled for empty fields).
     const erros: { nome?: string; email?: string; senha?: string } = {};
     if (modoAcesso === 'cadastro' && !nome) erros.nome = 'Informe seu nome completo.';
     if (!email) erros.email = 'Informe seu e-mail.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.email = 'Confira o e-mail: falta o @ ou o domínio.';
     if (!senhaAcesso) erros.senha = modoAcesso === 'login' ? 'Informe sua senha.' : 'Crie uma senha.';
     else if (modoAcesso === 'cadastro' && senhaAcesso.length < 8) erros.senha = 'Use pelo menos 8 caracteres.';
-    setErrosCampo(erros);
-    const primeiro = (['nome', 'email', 'senha'] as const).find((c) => erros[c]);
-    if (primeiro) {
+    setFieldErrors(erros);
+    const firstInvalid = (['nome', 'email', 'senha'] as const).find((c) => erros[c]);
+    if (firstInvalid) {
       const ids = { nome: 'membro-nome-cadastro', email: 'membro-email-acesso', senha: 'membro-senha-acesso' };
-      document.getElementById(ids[primeiro])?.focus();
+      document.getElementById(ids[firstInvalid])?.focus();
       return;
     }
 
@@ -223,7 +223,7 @@ export default function PortalMembros({ demo = false }: Props) {
       {!autenticado ? (
         <div className="mx-auto my-auto w-full max-w-[400px]">
           <div className="rounded-2xl border border-border/70 bg-canvas p-6 shadow-[0_1px_2px_rgb(46_44_36/0.05),0_12px_32px_-12px_rgb(46_44_36/0.18)] sm:p-8">
-            {/* A pomba é a única marca da tela: sem painel colorido, sem ícone genérico. */}
+            {/* The dove is the only brand mark on the screen: no colored panel, no generic icon. */}
             <span aria-hidden="true" className="logo-pomba-icone mx-auto block h-10 w-[3.4783rem]" />
 
             <h2 className="mt-5 text-center text-2xl font-bold tracking-tight text-ink">
@@ -260,10 +260,10 @@ export default function PortalMembros({ demo = false }: Props) {
 
             <form onSubmit={submeterAcesso} className="mt-6 space-y-5" noValidate>
               {modoAcesso === 'cadastro' && (
-                <CampoAcesso
+                <AuthField
                   id="membro-nome-cadastro"
-                  rotulo="Nome completo"
-                  erro={errosCampo.nome}
+                  label="Nome completo"
+                  error={fieldErrors.nome}
                   input={{
                     type: 'text',
                     value: nomeCadastro,
@@ -273,10 +273,10 @@ export default function PortalMembros({ demo = false }: Props) {
                 />
               )}
 
-              <CampoAcesso
+              <AuthField
                 id="membro-email-acesso"
-                rotulo="E-mail"
-                erro={errosCampo.email}
+                label="E-mail"
+                error={fieldErrors.email}
                 input={{
                   type: 'email',
                   value: emailAcesso,
@@ -288,9 +288,9 @@ export default function PortalMembros({ demo = false }: Props) {
               />
 
               {modoAcesso === 'cadastro' && (
-                <CampoAcesso
+                <AuthField
                   id="membro-telefone-cadastro"
-                  rotulo="WhatsApp"
+                  label="WhatsApp"
                   input={{
                     type: 'tel',
                     value: telefoneCadastro,
@@ -303,12 +303,12 @@ export default function PortalMembros({ demo = false }: Props) {
                 />
               )}
 
-              <CampoAcesso
+              <AuthField
                 id="membro-senha-acesso"
-                rotulo="Senha"
-                erro={errosCampo.senha}
-                dica={modoAcesso === 'cadastro' ? 'mínimo de 8 caracteres' : undefined}
-                acaoRotulo={
+                label="Senha"
+                error={fieldErrors.senha}
+                hint={modoAcesso === 'cadastro' ? 'mínimo de 8 caracteres' : undefined}
+                labelAction={
                   modoAcesso === 'login' ? (
                     <button
                       type="button"
@@ -326,7 +326,7 @@ export default function PortalMembros({ demo = false }: Props) {
                   onChange: (e) => setSenhaAcesso(e.target.value),
                   autoComplete: modoAcesso === 'login' ? 'current-password' : 'new-password',
                 }}
-                sufixo={
+                suffix={
                   <button
                     type="button"
                     onClick={() => setMostrarSenha((v) => !v)}
@@ -380,7 +380,7 @@ export default function PortalMembros({ demo = false }: Props) {
               )}
             </form>
 
-            {/* Fluxo irmão + ajuda: uma linha cada, depois do botão. */}
+            {/* Sibling flow + help: one line each, after the submit button. */}
             <div className="mt-6 space-y-2 border-t border-border/70 pt-5 text-center text-sm text-ink-muted">
               <p>
                 {modoAcesso === 'login' ? 'Ainda não tem conta?' : 'Já tem conta?'}{' '}
@@ -390,7 +390,7 @@ export default function PortalMembros({ demo = false }: Props) {
                     setModoAcesso(modoAcesso === 'login' ? 'cadastro' : 'login');
                     setErroAcesso('');
                     setInfoAcesso('');
-                    setErrosCampo({});
+                    setFieldErrors({});
                     setMsgEsqueciSenha(false);
                   }}
                   className="font-semibold text-accent-text underline-offset-2 hover:underline"
@@ -418,7 +418,7 @@ export default function PortalMembros({ demo = false }: Props) {
             </p>
           )}
 
-          {/* Cabeçalho do membro: linha simples, sem cartão em volta */}
+          {/* Member header: a plain row, no card around it */}
           <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4">
               <div
@@ -470,16 +470,16 @@ export default function PortalMembros({ demo = false }: Props) {
             </div>
           </header>
 
-          {/* Abas: linha com indicador azul sob a ativa; setas, Home e End navegam (pulando as travadas) */}
+          {/* Tabs: hairline with a blue indicator under the active one; arrows, Home and End navigate */}
           <div
             role="tablist"
             aria-label="Seções da Área de Membros"
-            onKeyDown={navegarAbas}
+            onKeyDown={handleTabKeyDown}
             className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1"
           >
             {ABAS.map((aba) => {
               const selecionada = abaAtiva === aba.id;
-              const travada = bloqueada(aba);
+              const locked = isLocked(aba);
               return (
                 <button
                   key={aba.id}
@@ -489,11 +489,11 @@ export default function PortalMembros({ demo = false }: Props) {
                   aria-selected={selecionada}
                   aria-controls={`painel-${aba.id}`}
                   tabIndex={selecionada ? 0 : -1}
-                  disabled={travada}
-                  aria-disabled={travada || undefined}
-                  onClick={travada ? undefined : () => setAbaAtiva(aba.id)}
+                  disabled={locked}
+                  aria-disabled={locked || undefined}
+                  onClick={locked ? undefined : () => setAbaAtiva(aba.id)}
                   className={`relative min-h-11 shrink-0 px-4 text-sm whitespace-nowrap transition-colors duration-150 ${
-                    travada
+                    locked
                       ? 'cursor-not-allowed text-ink-muted/60'
                       : selecionada
                         ? 'font-semibold text-ink'
@@ -502,7 +502,7 @@ export default function PortalMembros({ demo = false }: Props) {
                 >
                   {selecionada && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-accent" />}
                   {aba.rotulo}
-                  {travada && <span className="ml-1 font-normal">· em breve</span>}
+                  {locked && <span className="ml-1 font-normal">· em breve</span>}
                 </button>
               );
             })}
@@ -512,32 +512,32 @@ export default function PortalMembros({ demo = false }: Props) {
           {abaAtiva === 'inicio' && (
             <div id="painel-inicio" role="tabpanel" aria-labelledby="tab-inicio" tabIndex={0} className="outline-none">
               {demo ? (
-                // Um destaque (progresso da jornada) + uma lista do que vem a seguir. Sem grade de cartões iguais.
+                // One focal point (course progress) + a list of what's next. No grid of identical cards.
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
                   <section aria-labelledby="resumo-jornada" className="rounded-2xl bg-canvas p-6 sm:p-8">
                     <p id="resumo-jornada" className="text-sm font-medium text-ink-muted">
                       Jornada IdeAll
                     </p>
                     <p className="mt-2 flex items-baseline gap-3">
-                      <span className="text-5xl font-bold tracking-tight text-ink tabular-nums">{progressoGeral}%</span>
+                      <span className="text-5xl font-bold tracking-tight text-ink tabular-nums">{overallProgress}%</span>
                       <span className="text-sm text-ink-muted">
-                        {cursosInscritos.length === 0
+                        {enrolledCourses.length === 0
                           ? 'nenhum curso iniciado'
-                          : `${cursosInscritos.length} ${cursosInscritos.length === 1 ? 'curso em andamento' : 'cursos em andamento'}`}
+                          : `${enrolledCourses.length} ${enrolledCourses.length === 1 ? 'curso em andamento' : 'cursos em andamento'}`}
                       </span>
                     </p>
                     <div
                       className="mt-5 h-1.5 overflow-hidden rounded-full bg-surface"
                       role="progressbar"
                       aria-label="Progresso na Jornada IdeAll"
-                      aria-valuenow={progressoGeral}
+                      aria-valuenow={overallProgress}
                       aria-valuemin={0}
                       aria-valuemax={100}
                     >
-                      <div className="h-full rounded-full bg-accent" style={{ width: `${progressoGeral}%` }} />
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${overallProgress}%` }} />
                     </div>
                     <ul className="mt-6 divide-y divide-border/70">
-                      {cursosInscritos.slice(0, 3).map((c) => {
+                      {enrolledCourses.slice(0, 3).map((c) => {
                         const p = progressoCurso(c);
                         return (
                           <li key={c.id} className="flex items-center justify-between gap-4 py-3 text-sm">
@@ -592,7 +592,7 @@ export default function PortalMembros({ demo = false }: Props) {
                   </section>
                 </div>
               ) : (
-                // Estado vazio honesto: o que vem por aí e o que já dá para fazer agora.
+                // Honest empty state: what's coming and what can be done right now.
                 <section aria-labelledby="em-preparo" className="grid gap-8 rounded-2xl bg-canvas p-6 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                   <div>
                     <h3 id="em-preparo" className="text-xl font-bold tracking-tight text-ink">
@@ -1068,53 +1068,53 @@ export default function PortalMembros({ demo = false }: Props) {
   );
 }
 
-// Campo do login/cadastro: rótulo acima (com ação opcional à direita, ex.: "Esqueceu a senha?"),
-// erro abaixo ligado por aria-describedby. Texto de 16px no celular para o iOS não dar zoom.
-function CampoAcesso({
+// Sign-in/sign-up field: label above (with an optional right-aligned action, e.g. "Esqueceu a senha?"),
+// error below wired through aria-describedby. 16px text on mobile so iOS doesn't zoom on focus.
+function AuthField({
   id,
-  rotulo,
-  dica,
-  erro,
-  acaoRotulo,
-  sufixo,
+  label,
+  hint,
+  error,
+  labelAction,
+  suffix,
   input,
 }: {
   id: string;
-  rotulo: string;
-  dica?: string;
-  erro?: string;
-  acaoRotulo?: React.ReactNode;
-  sufixo?: React.ReactNode;
+  label: string;
+  hint?: string;
+  error?: string;
+  labelAction?: React.ReactNode;
+  suffix?: React.ReactNode;
   input: React.InputHTMLAttributes<HTMLInputElement>;
 }) {
-  const idErro = `${id}-erro`;
+  const errorId = `${id}-error`;
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <label htmlFor={id} className="text-sm font-medium text-ink">
-          {rotulo}
-          {dica && <span className="ml-1 font-normal text-ink-muted">{dica}</span>}
+          {label}
+          {hint && <span className="ml-1 font-normal text-ink-muted">{hint}</span>}
         </label>
-        {acaoRotulo}
+        {labelAction}
       </div>
       <div className="relative mt-1.5">
         <input
           id={id}
           {...input}
-          aria-invalid={erro ? true : undefined}
-          aria-describedby={erro ? idErro : undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={`min-h-12 w-full rounded-lg border bg-canvas px-3.5 text-base text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-ink-muted/70 focus:border-accent focus:ring-3 focus:ring-accent/20 focus:outline-none sm:text-sm ${
-            sufixo ? 'pr-11' : ''
-          } ${erro ? 'border-ink' : 'border-border-strong/50'}`}
+            suffix ? 'pr-11' : ''
+          } ${error ? 'border-ink' : 'border-border-strong/50'}`}
         />
-        {sufixo}
+        {suffix}
       </div>
-      {erro && (
-        <p id={idErro} className="mt-1.5 flex items-center gap-1.5 text-sm text-ink">
+      {error && (
+        <p id={errorId} className="mt-1.5 flex items-center gap-1.5 text-sm text-ink">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-11.5a.75.75 0 011.5 0v4a.75.75 0 01-1.5 0v-4zM10 14.5a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
           </svg>
-          {erro}
+          {error}
         </p>
       )}
     </div>

@@ -135,11 +135,19 @@ function ehDominioProprio(url: string): boolean {
 // Também os links que só viram <a href> (navegação do usuário, nada é carregado): atribuição do mapa
 // (Leaflet/OSM) e o link do WhatsApp dos líderes, montados dentro do JS da ilha.
 export const HOSTS_PERMITIDOS_NO_JS = ['tile.openstreetmap.org', 'www.openstreetmap.org', 'leafletjs.com', 'wa.me'];
+// Members area auth backend (Supabase project, called only from the /membros island) and
+// localhost defaults inside libraries, which never leave the visitor's machine.
+export const SUFIXOS_PERMITIDOS_NO_JS = ['.supabase.co'];
+export const HOSTS_LOCAIS = ['localhost', '127.0.0.1'];
 
 function ehHostPermitidoNoJs(url: string): boolean {
   try {
     const host = new URL(normalizarUrl(url)).hostname;
-    return HOSTS_PERMITIDOS_NO_JS.includes(host);
+    return (
+      HOSTS_PERMITIDOS_NO_JS.includes(host) ||
+      HOSTS_LOCAIS.includes(host) ||
+      SUFIXOS_PERMITIDOS_NO_JS.some((sufixo) => host.endsWith(sufixo))
+    );
   } catch {
     return false;
   }

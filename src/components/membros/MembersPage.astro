@@ -1,6 +1,6 @@
 ---
-// Moldura da Área de Membros: tela cheia, sem cabeçalho/rodapé do site e com um "Voltar" no canto.
-// Usada por /membros (login) e /membros/demo (painel com dados fictícios).
+// Members area frame: full screen, no site header/footer, and a "Voltar ao site" link in the corner.
+// Used by /membros (sign-in) and /membros/demo (dashboard with fake data).
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PortalMembros from '../islands/PortalMembros';
 
@@ -14,7 +14,7 @@ const { demo = false } = Astro.props;
 <BaseLayout
   title={demo ? 'Área de Membros: demonstração' : 'Área de Membros'}
   noindex
-  semNavegacao
+  hideNavigation
   description="Portal de membros da Igreja dos Vales: Jornada IdeAll (rede de cursos), meu iGrupo, minhas escalas e meus dados."
 >
   <section
@@ -23,7 +23,7 @@ const { demo = false } = Astro.props;
     aria-labelledby="portal-membros-titulo"
     class="relative flex min-h-dvh flex-col bg-surface text-ink"
   >
-    <!-- Sem cabeçalho e rodapé: o único caminho de volta ao site é este link. -->
+    <!-- No header or footer: this link is the only way back to the site. -->
     <div class="px-4 pt-4 sm:px-6 lg:px-8">
       <a
         href="/"
@@ -35,7 +35,7 @@ const { demo = false } = Astro.props;
     </div>
 
     <div class="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-      <!-- O cartão de login ("Entrar") e o painel ("Olá, …") já dizem onde a pessoa está: o h1 fica para leitores de tela. -->
+      <!-- The sign-in card ("Entrar") and the dashboard ("Olá, …") already say where you are: the h1 is for screen readers. -->
       <h1 id="portal-membros-titulo" class="sr-only">Área de Membros</h1>
 
       <PortalMembros client:load demo={demo} />

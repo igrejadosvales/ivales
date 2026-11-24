@@ -16,8 +16,8 @@ interface Props {
   noindex?: boolean;
   // Cabeçalho fixo e transparente sobre a imagem do topo (home).
   headerTransparente?: boolean;
-  // Página sem cabeçalho e rodapé (ex.: Área de Membros, que tem o próprio "Voltar").
-  semNavegacao?: boolean;
+  // Page without the site header and footer (e.g. the members area, which has its own back link).
+  hideNavigation?: boolean;
   // JSON-LD extra da página (FAQPage, BreadcrumbList, ItemList...). O da organização e o do site já vão sempre.
   schema?: object[];
 }
@@ -28,7 +28,7 @@ const {
   socialImage = fotoPadrao,
   noindex = false,
   headerTransparente = false,
-  semNavegacao = false,
+  hideNavigation = false,
   schema = [],
 } = Astro.props;
 
@@ -81,10 +81,10 @@ const jsonLd = [schemaOrganizacao(), schemaSite(), ...schema];
     >
       Pular para o conteúdo
     </a>
-    {!semNavegacao && <Header transparente={headerTransparente} />}
+    {!hideNavigation && <Header transparente={headerTransparente} />}
     <main id="conteudo" tabindex="-1" class="outline-none">
       <slot />
     </main>
-    {!semNavegacao && <Footer />}
+    {!hideNavigation && <Footer />}
   </body>
 </html>

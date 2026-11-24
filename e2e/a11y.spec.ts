@@ -12,6 +12,8 @@ for (const [nome, viewport] of [
     test.use({ viewport });
     for (const rota of ROTAS) {
       test(`${rota} sem violações sérias ou críticas`, async ({ page }) => {
+        // Reduced motion turns off entrance animations, so axe never measures text mid-fade.
+        await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.goto(rota);
         await page.evaluate(() => document.fonts.ready);
         const resultado = await new AxeBuilder({ page }).exclude('astro-dev-toolbar').analyze();

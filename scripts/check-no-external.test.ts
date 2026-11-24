@@ -238,3 +238,15 @@ describe('próprio domínio, JSON-LD e tiles do mapa', () => {
     expect(encontrarNoJs('"https://outro.openstreetmap.org/a"')).toHaveLength(1);
   });
 });
+
+describe('members area backend', () => {
+  it('JS may reference the Supabase project and localhost library defaults', () => {
+    expect(encontrarNoJs('createClient("https://abc123.supabase.co")')).toEqual([]);
+    expect(encontrarNoJs('"http://localhost:9999"')).toEqual([]);
+  });
+
+  it('a look-alike host is still flagged', () => {
+    expect(encontrarNoJs('"https://supabase.co.evil.example/x"')).toHaveLength(1);
+  });
+});
+
