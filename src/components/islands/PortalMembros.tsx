@@ -1,7 +1,8 @@
 import { type KeyboardEvent, type SyntheticEvent, useState } from 'react';
+import { actions } from 'astro:actions';
 import Providers from './Providers';
-import { getSupabaseClient } from '../../lib/supabase';
 import { formatarTelefone, somenteDigitos } from '../../lib/voluntariado';
+import { MIN_PASSWORD_LENGTH } from '../../lib/member-auth';
 import {
   CURSOS_IDEALL,
   ESCALAS_INICIAIS,
@@ -48,7 +49,7 @@ export default function PortalMembros({ demo = false }: Props) {
   const [infoAcesso, setInfoAcesso] = useState('');
   const [enviandoAcesso, setEnviandoAcesso] = useState(false);
   // Per-field errors: shown under each field; focus moves to the first invalid one.
-  const [fieldErrors, setFieldErrors] = useState<{ nome?: string; email?: string; senha?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ nome?: string; email?: string; telefone?: string; senha?: string }>({});
 
   // Estado do membro logado
   const [perfil, setPerfil] = useState<PerfilMembro>(PERFIL_DEMONSTRACAO);
@@ -102,61 +103,39 @@ export default function PortalMembros({ demo = false }: Props) {
     const nome = nomeCadastro.trim();
 
     // Validate everything on submit (the button is never disabled for empty fields).
-    const erros: { nome?: string; email?: string; senha?: string } = {};
+    const erros: { nome?: string; email?: string; telefone?: string; senha?: string } = {};
     if (modoAcesso === 'cadastro' && !nome) erros.nome = 'Informe seu nome completo.';
     if (!email) erros.email = 'Informe seu e-mail.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.email = 'Confira o e-mail: falta o @ ou o domínio.';
+    if (modoAcesso === 'cadastro' && somenteDigitos(telefoneCadastro).length < 10) erros.telefone = 'Informe um WhatsApp válido, com DDD.';
     if (!senhaAcesso) erros.senha = modoAcesso === 'login' ? 'Informe sua senha.' : 'Crie uma senha.';
-    else if (modoAcesso === 'cadastro' && senhaAcesso.length < 8) erros.senha = 'Use pelo menos 8 caracteres.';
+    else if (modoAcesso === 'cadastro' && senhaAcesso.length < MIN_PASSWORD_LENGTH) erros.senha = 'Use pelo menos 8 caracteres.';
     setFieldErrors(erros);
-    const firstInvalid = (['nome', 'email', 'senha'] as const).find((c) => erros[c]);
+    const firstInvalid = (['nome', 'email', 'telefone', 'senha'] as const).find((c) => erros[c]);
     if (firstInvalid) {
-      const ids = { nome: 'membro-nome-cadastro', email: 'membro-email-acesso', senha: 'membro-senha-acesso' };
+      const ids = { nome: 'membro-nome-cadastro', email: 'membro-email-acesso', telefone: 'membro-telefone-cadastro', senha: 'membro-senha-acesso' };
       document.getElementById(ids[firstInvalid])?.focus();
-      return;
-    }
-
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setErroAcesso('O acesso está temporariamente indisponível. Tente novamente em instantes.');
       return;
     }
 
     setEnviandoAcesso(true);
     try {
-      if (modoAcesso === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password: senhaAcesso });
-        if (error || !data.user) {
-          setErroAcesso('E-mail ou senha incorretos.');
-          return;
-        }
-        await entrarComoMembro(supabase, data.user.id, email);
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: senhaAcesso,
-        options: {
-          data: { full_name: nome, phone: telefoneCadastro.trim() },
-          emailRedirectTo: `${window.location.origin}/membros`,
-        },
-      });
+      const credentials = { email, password: senhaAcesso };
+      const { data: result, error } =
+        modoAcesso === 'login'
+          ? await actions.members.login(credentials)
+          : await actions.members.signUp({ ...credentials, fullName: nome, phone: telefoneCadastro.trim() });
       if (error) {
-        setErroAcesso(
-          /already|registered/i.test(error.message)
-            ? 'Este e-mail já está cadastrado. Entre com sua senha.'
-            : 'Não foi possível concluir o cadastro. Tente novamente.',
-        );
+        setErroAcesso(error.message);
         return;
       }
-      if (data.session && data.user) {
-        await entrarComoMembro(supabase, data.user.id, email);
-      } else {
+      if ('needsConfirmation' in result && result.needsConfirmation) {
         setModoAcesso('login');
         setSenhaAcesso('');
         setInfoAcesso('Cadastro realizado! Enviamos um link de confirmação para o seu e-mail. Confirme e depois entre.');
+        return;
       }
+      entrarComoMembro(result.profile, email);
     } catch {
       setErroAcesso('Falha de conexão. Tente novamente.');
     } finally {
@@ -164,8 +143,7 @@ export default function PortalMembros({ demo = false }: Props) {
     }
   }
 
-  async function entrarComoMembro(supabase: NonNullable<ReturnType<typeof getSupabaseClient>>, id: string, email: string) {
-    const { data } = await supabase.from('member_profiles').select('*').eq('id', id).maybeSingle();
+  function entrarComoMembro(data: Record<string, any> | null, email: string) {
     setPerfil((atual) => ({
       ...atual,
       nome: data?.full_name ?? atual.nome,
@@ -291,6 +269,7 @@ export default function PortalMembros({ demo = false }: Props) {
                 <AuthField
                   id="membro-telefone-cadastro"
                   label="WhatsApp"
+                  error={fieldErrors.telefone}
                   input={{
                     type: 'tel',
                     value: telefoneCadastro,

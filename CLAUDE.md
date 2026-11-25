@@ -9,3 +9,4 @@
 ## Database
 
 - Supabase migrations live in `supabase/migrations/`, named `<timestamp>_<snake_case_english_description>.sql`.
+- Every Supabase interaction goes through Astro Actions (`src/actions/`: one file per domain, aggregated in `index.ts`). Islands never import `@supabase/supabase-js`. The secret key bypasses RLS, so each action must validate its input and scope its queries.

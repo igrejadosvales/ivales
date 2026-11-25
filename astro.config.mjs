@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import { loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import vercel from '@astrojs/vercel';
 import { rm } from 'node:fs/promises';
 
 // Páginas que só existem em desenvolvimento (vitrine de componentes).
@@ -37,7 +38,9 @@ for (const [name, value] of Object.entries(env)) {
 
 export default defineConfig({
   site: 'https://ivales.org',
+  // Pages are prerendered; only routes with `prerender = false` (src/pages/api) run on the server.
   output: 'static',
+  adapter: vercel(),
   // URLs sem barra no final (/sobre), iguais aos links internos e ao canonical.
   // O build gera sobre.html e a Vercel serve como /sobre (cleanUrls no vercel.json).
   trailingSlash: 'never',
@@ -45,7 +48,7 @@ export default defineConfig({
   // Rotas antigas do site anterior. Na Vercel o 301 real vem do vercel.json; estas páginas de
   // meta refresh ficam só como plano B para outros hosts.
   redirects: {
-    '/voluntarios': { status: 301, destination: '/voluntariado' },
+    '/voluntariado': { status: 301, destination: '/voluntarios' },
     '/contact': { status: 301, destination: '/contato' },
     '/biblia': { status: 301, destination: '/' },
   },

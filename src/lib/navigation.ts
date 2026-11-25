@@ -9,7 +9,7 @@ export const navItems: readonly NavItem[] = [
   { label: 'Sobre', href: '/sobre' },
   { label: 'Ministérios', href: '/ministerios' },
   { label: 'iGrupos', href: '/igrupos' },
-  { label: 'Voluntariado', href: '/voluntariado' },
+  { label: 'Voluntariado', href: '/voluntarios' },
   { label: 'Membros', href: '/membros' },
   { label: 'Contato', href: '/contato' },
   { label: 'Ofertar', href: '/ofertar' },

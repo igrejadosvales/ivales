@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent, type ReactNode } from 'react';
+import { actions } from 'astro:actions';
 import Providers from './Providers';
-import { getSupabaseClient } from '../../lib/supabase';
 import {
   AREAS,
   CATEGORIAS,
@@ -479,26 +479,18 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
     setErroConsentimento(undefined);
     setMensagem('');
 
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setMensagem('O cadastro está temporariamente indisponível. Tente novamente em instantes.');
-      return;
-    }
-
     const janelaWhatsApp = window.open('', '_blank', 'noopener,noreferrer');
     setSalvando(true);
 
     try {
-      const { error } = await supabase.rpc('create_volunteer', {
-        p_full_name: dados.nome,
-        p_email: dados.email,
-        p_phone: dados.telefone,
-        p_birth_date: dados.nascimento,
-        // Mantemos o parâmetro para compatibilidade com a RPC atual; o campo não é mais exibido.
-        p_education_level: null,
-        p_area_ids: areas,
-        p_wants_guidance: querOrientacao,
-        p_contact_consent: consentimento,
+      const { error } = await actions.volunteers.create({
+        fullName: dados.nome,
+        email: dados.email,
+        phone: dados.telefone,
+        birthDate: dados.nascimento,
+        areaIds: [...areas],
+        wantsGuidance: querOrientacao,
+        contactConsent: consentimento,
       });
 
       if (error) throw error;

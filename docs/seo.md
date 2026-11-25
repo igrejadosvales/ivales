@@ -16,7 +16,7 @@ Objetivo: quem procura **"igreja em Gravataí"**, **"igreja no Sarandi"** ou **"
 | `sitemap.xml` com as páginas públicas, e `robots.txt` apontando para ele | `src/pages/sitemap.xml.ts`, `public/robots.txt` |
 | A Área de Membros não aparece no Google (`noindex`) | `src/pages/membros.astro`, `vercel.json` |
 | Endereços `*.vercel.app` não são indexados, então o Google não vê duas cópias do site | `vercel.json` |
-| `www.ivales.org` redireciona para `ivales.org`, e os links antigos (`/voluntarios`, `/contact`, `/biblia`) redirecionam com 301 | `vercel.json` |
+| `www.ivales.org` redireciona para `ivales.org`, e os links antigos (`/voluntariado`, `/contact`, `/biblia`) redirecionam com 301 | `vercel.json` |
 | Fotos em AVIF/WebP no tamanho da tela (de 3 MB para no máximo ~250 KB), o que deixa as páginas mais rápidas | `astro:assets` |
 | Imagem de compartilhamento de 1200×630 por página (WhatsApp, Instagram, Facebook) | prop `socialImage` |
 | Checagem automática a cada build: título, descrição, um `<h1>`, canonical, imagem, JSON-LD e sitemap | `npm run check:seo` |
@@ -61,7 +61,7 @@ Hoje o site usa valores provisórios nestes pontos. Enquanto não forem corrigid
 4. **Conferir no terminal:**
    ```sh
    curl -I https://ivales.vercel.app      # deve ter: x-robots-tag: noindex, nofollow
-   curl -I https://ivales.org/voluntarios # deve ser 308/301 para /voluntariado
+   curl -I https://ivales.org/voluntariado # deve ser 308/301 para /voluntarios
    curl -I https://www.ivales.org         # deve redirecionar para https://ivales.org/
    ```
 5. **Site antigo:** se ele ainda estiver em outro domínio (ex.: `igrejadosvales.com.br`):

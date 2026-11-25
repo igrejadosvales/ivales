@@ -47,7 +47,7 @@ src/
   lib/navigation.ts     itens do menu (fonte única)
   lib/voluntariado.ts   áreas, escolaridades, validação e resumo do WhatsApp (fonte única)
   pages/index.astro     página inicial: conteúdo do site atual, no nosso design system
-  pages/voluntariado.astro  landing + cadastro de voluntário
+  pages/voluntarios.astro   landing + cadastro de voluntário
   pages/design.astro    vitrine de componentes (só dev, noindex)
 e2e/                    Playwright
 scripts/                check-no-external.ts (+ teste)
@@ -85,7 +85,7 @@ Limite conhecido: o JS só é verificado por strings literais. Uma URL montada p
 ## Limitações conhecidas
 
 - Os links do menu apontam para páginas que só existem a partir da fase 2 (`/sobre`, `/cultos` etc.). Até lá, dão 404.
-- Os redirects antigos (`/voluntarios`, `/contact`, `/biblia`) são 301 reais pelo `vercel.json`. As páginas de `<meta http-equiv="refresh">` geradas pelo Astro ficam só como plano B fora da Vercel.
+- Os redirects antigos (`/voluntariado`, `/contact`, `/biblia`) são 301 reais pelo `vercel.json`. As páginas de `<meta http-equiv="refresh">` geradas pelo Astro ficam só como plano B fora da Vercel.
 - Domínio oficial: `https://ivales.org` (`SITE_URL` em `src/lib/igreja.ts`). O build gera `sobre.html` e a Vercel serve `/sobre` (`cleanUrls`). Todo `*.vercel.app` recebe `X-Robots-Tag: noindex`.
 - Locais, horários dos cultos e redes sociais vêm só de `src/lib/igreja.ts`. Estratégia e tarefas fora do código: `docs/seo.md`.
 - Os textos de endereço e telefone no rodapé estão marcados como "[a confirmar]".

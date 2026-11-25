@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const pronto = (page: Page) => page.locator('[data-formulario-pronto="true"]');
 
 async function abrirFormulario(page: Page) {
-  await page.goto('/voluntariado');
+  await page.goto('/voluntarios');
   await pronto(page).waitFor();
   await page.locator('#cadastro').scrollIntoViewIfNeeded();
 }
@@ -31,14 +31,14 @@ async function capturarWhatsApp(page: Page) {
 }
 
 test.describe('landing de voluntariado', () => {
-  test('o endereço antigo /voluntarios leva para /voluntariado', async ({ page }) => {
-    await page.goto('/voluntarios');
-    await expect(page).toHaveURL(/\/voluntariado$/);
+  test('o endereço antigo /voluntariado leva para /voluntarios', async ({ page }) => {
+    await page.goto('/voluntariado');
+    await expect(page).toHaveURL(/\/voluntarios$/);
     await expect(page.locator('main h1')).toContainText('Sirva com propósito');
   });
 
   test('mostra um único h1, os dois caminhos e os três passos', async ({ page }) => {
-    await page.goto('/voluntariado');
+    await page.goto('/voluntarios');
 
     await expect(page.locator('main h1')).toHaveCount(1);
     await expect(page.locator('main h1')).toContainText('Sirva com propósito');
@@ -52,7 +52,7 @@ test.describe('landing de voluntariado', () => {
   });
 
   test('o cartão "Já sou voluntário" leva ao aviso da área', async ({ page }) => {
-    await page.goto('/voluntariado');
+    await page.goto('/voluntarios');
     await page.locator('#caminhos').getByRole('link', { name: /Já sou voluntário/ }).click();
     await expect(page.locator('#area-voluntario')).toBeInViewport();
     await expect(page.locator('#area-voluntario')).toContainText('Em breve');

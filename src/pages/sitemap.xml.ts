@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { SITE_URL } from '../lib/igreja';
 
 // Só páginas públicas e indexáveis. /membros (área logada) e /design (só dev) ficam de fora.
-export const ROTAS_DO_SITEMAP = ['/', '/sobre', '/ministerios', '/igrupos', '/voluntariado', '/ofertar', '/contato'] as const;
+export const ROTAS_DO_SITEMAP = ['/', '/sobre', '/ministerios', '/igrupos', '/voluntarios', '/ofertar', '/contato'] as const;
 
 export const GET: APIRoute = ({ site }) => {
   const baseUrl = site ?? new URL(SITE_URL);

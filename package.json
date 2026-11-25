@@ -14,10 +14,10 @@
     "check": "astro check",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check:external": "tsx scripts/check-no-external.ts dist",
-    "check:budget": "tsx scripts/check-orcamento.ts dist",
+    "check:external": "tsx scripts/check-no-external.ts dist/client",
+    "check:budget": "tsx scripts/check-orcamento.ts dist/client",
     "verify": "npm run check && npm test && npm run build && npm run check:external && npm run check:budget && npm run check:seo",
-    "check:seo": "tsx scripts/check-seo.ts dist"
+    "check:seo": "tsx scripts/check-seo.ts dist/client"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@astrojs/react": "7.1.9",
+    "@astrojs/vercel": "^11.0.22",
     "@heroui/react": "3.2.7",
     "@heroui/styles": "3.2.7",
     "@internationalized/date": "3.12.4",

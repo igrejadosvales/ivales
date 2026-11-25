@@ -4,8 +4,8 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/voluntarios",
-      "destination": "/voluntariado",
+      "source": "/voluntariado",
+      "destination": "/voluntarios",
       "permanent": true
     },
     {
