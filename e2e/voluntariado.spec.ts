@@ -119,7 +119,7 @@ test.describe('cadastro de voluntário', () => {
     await expect(page.getByRole('heading', { level: 3, name: 'Mensagem pronta!' })).toBeVisible();
 
     const url = await page.evaluate(() => (window as Window & { __urlWhatsApp?: string }).__urlWhatsApp ?? '');
-    expect(url.startsWith('https://wa.me/5511999999999?text=')).toBe(true);
+    expect(url.startsWith('https://wa.me/5551993943907?text=')).toBe(true);
     const texto = decodeURIComponent(url.split('text=')[1] ?? '');
     expect(texto).toContain('Maria Silva');
     expect(texto).toContain('maria@exemplo.com');
@@ -127,7 +127,7 @@ test.describe('cadastro de voluntário', () => {
     expect(texto).toContain('Louvor e Adoração, Recepção');
 
     const link = page.getByRole('link', { name: 'Abrir WhatsApp novamente' });
-    await expect(link).toHaveAttribute('href', /^https:\/\/wa\.me\/5511999999999\?text=/);
+    await expect(link).toHaveAttribute('href', /^https:\/\/wa\.me\/5551993943907\?text=/);
   });
 
   test('voltar preserva os dados já preenchidos', async ({ page }) => {

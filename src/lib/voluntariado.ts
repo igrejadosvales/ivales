@@ -1,6 +1,6 @@
 // Dados e regras do fluxo de voluntariado. Sem React: a página Astro e a ilha usam as mesmas listas.
 // O número abaixo é o que aparece hoje no site antigo e ainda precisa ser confirmado com a liderança.
-export const WHATSAPP_VOLUNTARIADO = '5511999999999';
+export const WHATSAPP_VOLUNTARIADO = '5551993943907';
 
 export type CategoriaArea = 'louvor' | 'criancas' | 'jovens' | 'midia' | 'recepcao' | 'outros';
 

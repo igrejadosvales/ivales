@@ -42,7 +42,7 @@ Edite só `src/lib/igreja.ts` e rode `npm run verify`. O site inteiro e os dados
 
 Hoje o site usa valores provisórios nestes pontos. Enquanto não forem corrigidos, o telefone fica fora dos dados do Google.
 
-- [ ] **Telefone/WhatsApp real** da secretaria. Hoje é `(11) 99999-9999`, em `src/lib/contato.ts`.
+- [x] **Telefone/WhatsApp real**: `(51) 99394-3907`, em `src/lib/contato.ts`.
 - [ ] **E-mail no domínio novo** (ex.: `contato@ivales.org`). Hoje é `contato@igrejadosvales.com`, e na home ainda aparece `financeiro@igrejadosvales.com.br`.
 - [ ] **CEP** dos dois endereços.
 - [ ] **Foto própria do Outside**. Hoje usa uma foto geral de ministérios.

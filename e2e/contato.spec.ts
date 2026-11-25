@@ -27,7 +27,7 @@ test.describe('página de contato (/contato)', () => {
     await expect(page.getByText('Lucas Andrade')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Abrir WhatsApp novamente' })).toHaveAttribute(
       'href',
-      /https:\/\/wa\.me\/5511999999999\?text=/,
+      /https:\/\/wa\.me\/5551993943907\?text=/,
     );
   });
 });

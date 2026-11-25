@@ -2,10 +2,10 @@ import { emailValido, formatarTelefone, montarLinkWhatsApp, telefoneValido } fro
 
 import { enderecoCurto, localPorId } from './igreja';
 
-// PENDENTE: WhatsApp/telefone e e-mail ainda são provisórios (ver docs/seo.md). Não vão para o JSON-LD.
-export const WHATSAPP_CONTATO = '5511999999999';
+// WhatsApp/telefone is the official iVales channel. PENDING: e-mail is still provisional (see docs/seo.md).
+export const WHATSAPP_CONTATO = '5551993943907';
 export const EMAIL_CONTATO = 'contato@igrejadosvales.com';
-export const TELEFONE_EXIBICAO = '(11) 99999-9999';
+export const TELEFONE_EXIBICAO = '(51) 99394-3907';
 export const ENDERECO_CONTATO = enderecoCurto(localPorId('gravatai'));
 
 export type AssuntoContato =
