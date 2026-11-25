@@ -1,5 +1,5 @@
 ---
-// Cartão de lista com ícone (SVG no slot "icone"), título e texto. Sem ação própria.
+// Cartão de lista com ícone (SVG no slot "icone"), título, texto e uma ação opcional (slot "acao").
 interface Props {
   titulo: string;
   class?: string;
@@ -14,4 +14,9 @@ const { titulo, class: className = '' } = Astro.props;
   </span>
   <h3 class="mt-4 text-lg leading-tight font-semibold text-ink">{titulo}</h3>
   <p class="mt-2 text-sm leading-relaxed text-ink-muted"><slot /></p>
+  {Astro.slots.has('acao') && (
+    <div class="mt-auto flex justify-center pt-4">
+      <slot name="acao" />
+    </div>
+  )}
 </article>
