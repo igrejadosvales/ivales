@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type SyntheticEvent, useState } from 'react';
+import { type KeyboardEvent, type SyntheticEvent, useEffect, useState } from 'react';
 import { actions } from 'astro:actions';
 import Providers from './Providers';
 import { formatarTelefone, somenteDigitos } from '../../lib/voluntariado';
@@ -124,7 +124,7 @@ export default function PortalMembros({ demo = false }: Props) {
       const { data: result, error } =
         modoAcesso === 'login'
           ? await actions.members.login(credentials)
-          : await actions.members.signUp({ ...credentials, fullName: nome, phone: telefoneCadastro.trim() });
+          : await actions.members.signUp({ ...credentials, fullName: nome, phone: telefoneCadastro.trim(), next: nextPath() ?? undefined });
       if (error) {
         setErroAcesso(error.message);
         return;
@@ -143,7 +143,41 @@ export default function PortalMembros({ demo = false }: Props) {
     }
   }
 
+  // Where to go after signing in, e.g. ?next=/voluntarios/cadastro. Only same-site paths are accepted.
+  function nextPath(): string | null {
+    const next = new URLSearchParams(window.location.search).get('next');
+    return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+  }
+
+  // On load: ?modo=cadastro opens the sign-up form, and an existing session skips the sign-in screen.
+  useEffect(() => {
+    if (demo) return;
+    if (new URLSearchParams(window.location.search).get('modo') === 'cadastro') setModoAcesso('cadastro');
+    (async () => {
+      try {
+        const { data } = await actions.members.me();
+        if (data?.profile) entrarComoMembro(data.profile, data.profile.email ?? '');
+      } catch {
+        // No session or offline: the sign-in form stays.
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function sairDaConta() {
+    try {
+      await actions.members.logout();
+    } finally {
+      setAutenticado(false);
+    }
+  }
+
   function entrarComoMembro(data: Record<string, any> | null, email: string) {
+    const next = nextPath();
+    if (next) {
+      window.location.assign(next);
+      return;
+    }
     setPerfil((atual) => ({
       ...atual,
       nome: data?.full_name ?? atual.nome,
@@ -440,7 +474,7 @@ export default function PortalMembros({ demo = false }: Props) {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setAutenticado(false)}
+                  onClick={sairDaConta}
                   className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink underline-offset-4 hover:bg-canvas hover:underline"
                 >
                   Sair da conta

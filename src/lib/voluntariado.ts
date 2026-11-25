@@ -1,4 +1,4 @@
-// Dados e regras do fluxo de voluntariado. Sem React: a página Astro e a ilha usam as mesmas listas.
+// Dados e regras do fluxo de voluntariado, sem React. As áreas ficam no banco (tabela volunteer_areas).
 // O número abaixo é o que aparece hoje no site antigo e ainda precisa ser confirmado com a liderança.
 export const WHATSAPP_VOLUNTARIADO = '5551993943907';
 
@@ -24,81 +24,6 @@ export interface AreaVoluntariado {
   habilidades: readonly string[];
   compromisso: string;
 }
-
-export const AREAS: readonly AreaVoluntariado[] = [
-  {
-    id: 'next',
-    nome: 'iVales Kids',
-    descricao: 'Ministério infantil que cuida e ensina as crianças durante os cultos.',
-    categoria: 'criancas',
-    icone: 'sorriso',
-    habilidades: ['Paciência', 'Amor por crianças', 'Criatividade'],
-    compromisso: 'Domingos pela manhã, em escalas rotativas.',
-  },
-  {
-    id: 'hangout',
-    nome: 'Hangout (Jovens)',
-    descricao: 'Ministério de jovens que conecta e discipula a próxima geração.',
-    categoria: 'jovens',
-    icone: 'controle',
-    habilidades: ['Comunicação', 'Liderança', 'Empatia'],
-    compromisso: 'Sextas à noite e domingos.',
-  },
-  {
-    id: 'outside',
-    nome: 'Outside (Evangelismo)',
-    descricao: 'Ministério que alcança pessoas fora da igreja com o amor de Jesus.',
-    categoria: 'outros',
-    icone: 'globo',
-    habilidades: ['Comunicação', 'Coragem', 'Amor pelas pessoas'],
-    compromisso: 'Sábados pela manhã.',
-  },
-  {
-    id: 'diaconos',
-    nome: 'Diáconos',
-    descricao: 'Serviço prático de apoio à igreja e às pessoas que precisam.',
-    categoria: 'outros',
-    icone: 'aperto',
-    habilidades: ['Disponibilidade', 'Coração servo', 'Organização'],
-    compromisso: 'Domingos e eventos especiais.',
-  },
-  {
-    id: 'louvor',
-    nome: 'Louvor e Adoração',
-    descricao: 'Ministério de música que conduz a congregação em adoração.',
-    categoria: 'louvor',
-    icone: 'musica',
-    habilidades: ['Musicalidade', 'Dedicação', 'Compromisso com ensaios'],
-    compromisso: 'Ensaios semanais e cultos de domingo.',
-  },
-  {
-    id: 'midia',
-    nome: 'Mídia e Comunicação',
-    descricao: 'Transmissão online, áudio, vídeo e redes sociais.',
-    categoria: 'midia',
-    icone: 'video',
-    habilidades: ['Conhecimento técnico', 'Atenção aos detalhes', 'Criatividade'],
-    compromisso: 'Domingos e produção de conteúdo.',
-  },
-  {
-    id: 'recepcao',
-    nome: 'Recepção',
-    descricao: 'Acolhimento de visitantes e membros nos cultos.',
-    categoria: 'recepcao',
-    icone: 'mao',
-    habilidades: ['Simpatia', 'Comunicação', 'Organização'],
-    compromisso: 'Domingos, em escalas rotativas.',
-  },
-  {
-    id: 'intercessao',
-    nome: 'Intercessão',
-    descricao: 'Ministério de oração pela igreja e pelas necessidades de cada pessoa.',
-    categoria: 'outros',
-    icone: 'coracao',
-    habilidades: ['Vida de oração', 'Compromisso', 'Discrição'],
-    compromisso: 'Encontros semanais de oração.',
-  },
-];
 
 export interface DadosVoluntario {
   nome: string;
@@ -211,10 +136,9 @@ export function validarConsentimento(consentimento: boolean): ErrosRevisao {
 // Resumo enviado pelo WhatsApp. É texto simples, com a formatação de negrito do próprio WhatsApp.
 export function montarResumo(
   dados: DadosVoluntario,
-  areas: readonly string[],
+  nomes: readonly string[],
   querOrientacao: boolean,
 ): string {
-  const nomes = AREAS.filter((area) => areas.includes(area.id)).map((area) => area.nome);
 
   const linhas = [
     '*Cadastro de voluntário — Igreja dos Vales*',

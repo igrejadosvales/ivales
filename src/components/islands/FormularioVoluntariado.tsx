@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent, type ReactNode } from 'react';
 import { actions } from 'astro:actions';
 import Providers from './Providers';
+import { MIN_PASSWORD_LENGTH } from '../../lib/member-auth';
 import {
-  AREAS,
   CATEGORIAS,
   DADOS_INICIAIS,
   formatarData,
@@ -210,38 +210,38 @@ function Progresso({ etapa, concluido }: { etapa: Etapa; concluido: boolean }) {
       <p className="mb-3 text-sm font-semibold text-ink-muted sm:hidden">
         Etapa {etapa} de 3 · {rotuloAtual}
       </p>
-      <ol className="flex items-center gap-2 sm:gap-4">
-        {ETAPAS.map((item, indice) => {
+      {/* Three equal segments: the bar shows progress, the label below names each step. */}
+      <ol className="grid grid-cols-3 gap-2 sm:gap-3">
+        {ETAPAS.map((item) => {
           const feita = concluido || item.numero < etapa;
           const atual = !concluido && item.numero === etapa;
           return (
-            <li
-              key={item.numero}
-              className="flex flex-1 items-center gap-2"
-              aria-current={atual ? 'step' : undefined}
-            >
+            <li key={item.numero} aria-current={atual ? 'step' : undefined}>
               <span
                 aria-hidden="true"
                 className={cx(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
-                  feita
-                    ? 'border-accent bg-accent text-on-accent'
-                    : atual
-                      ? 'border-accent bg-canvas text-accent-text'
-                      : 'border-border bg-canvas text-ink-muted',
+                  'block h-1.5 rounded-full transition-colors duration-300',
+                  feita || atual ? 'bg-accent' : 'bg-surface',
                 )}
-              >
-                {feita ? <Icone nome="check" className="h-4 w-4" /> : item.numero}
+              />
+              <span className="sr-only sm:not-sr-only sm:mt-3 sm:flex sm:items-center sm:gap-2">
+                <span
+                  aria-hidden="true"
+                  className={cx(
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                    feita
+                      ? 'bg-accent text-on-accent'
+                      : atual
+                        ? 'bg-accent/10 text-accent-text'
+                        : 'bg-surface text-ink-muted',
+                  )}
+                >
+                  {feita ? <Icone nome="check" className="h-3.5 w-3.5" /> : item.numero}
+                </span>
+                <span className={cx('text-sm', atual ? 'font-bold text-ink' : 'font-medium text-ink-muted')}>
+                  {item.rotulo}
+                </span>
               </span>
-              <span
-                className={cx(
-                  'sr-only text-sm font-semibold sm:not-sr-only',
-                  atual || feita ? 'text-ink' : 'text-ink-muted',
-                )}
-              >
-                {item.rotulo}
-              </span>
-              {indice < ETAPAS.length - 1 && <span className="hidden h-px flex-1 bg-border sm:block" aria-hidden="true" />}
             </li>
           );
         })}
@@ -272,9 +272,9 @@ function CartaoArea({
       />
       <span
         className={cx(
-          'flex h-full flex-col rounded-cartao border-2 p-5 transition-colors',
+          'flex h-full flex-col rounded-cartao p-5 transition-colors',
           'peer-focus-visible:outline-2 peer-focus-visible:outline-solid peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus',
-          selecionada ? 'border-accent bg-surface' : 'border-border bg-canvas hover:border-border-strong',
+          selecionada ? 'bg-accent/10' : 'bg-surface',
         )}
       >
         <span className="flex items-start justify-between gap-3">
@@ -282,7 +282,7 @@ function CartaoArea({
             <span
               className={cx(
                 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
-                selecionada ? 'bg-accent text-on-accent' : 'bg-surface text-accent-text',
+                selecionada ? 'bg-accent text-on-accent' : 'bg-canvas text-accent-text',
               )}
             >
               <Icone nome={area.icone} />
@@ -306,7 +306,7 @@ function CartaoArea({
           {area.habilidades.map((habilidade) => (
             <span
               key={habilidade}
-              className="rounded-full border border-border bg-canvas px-2.5 py-1 text-xs font-medium text-ink-muted"
+              className="rounded-full bg-canvas px-2.5 py-1 text-xs font-medium text-ink-muted"
             >
               {habilidade}
             </span>
@@ -341,7 +341,7 @@ function Resumo({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-cartao border border-border bg-surface p-5">
+    <section className="rounded-cartao bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <h4 className="text-lg font-bold text-ink">{titulo}</h4>
         <button type="button" onClick={onEditar} className="inline-flex min-h-9 items-center gap-1 rounded-md text-sm font-semibold text-accent-text underline underline-offset-4 hover:text-accent-hover">
@@ -377,6 +377,35 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   const [salvando, setSalvando] = useState(false);
   const [maxNascimento, setMaxNascimento] = useState<string | undefined>();
   const [pronto, setPronto] = useState(false);
+  // Every volunteer is a member: a signed-in member uses their account (prefilled); anyone else
+  // creates the member account right here, with a password, in the same submission.
+  const [account, setAccount] = useState<'loading' | 'signedOut' | 'member'>('loading');
+  const [password, setPassword] = useState('');
+  // Areas come from the database (volunteer_areas).
+  const [allAreas, setAllAreas] = useState<AreaVoluntariado[]>([]);
+  const [areasStatus, setAreasStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  const loadAreas = async () => {
+    setAreasStatus('loading');
+    try {
+      const { data, error } = await actions.volunteers.areas();
+      if (error) throw error;
+      setAllAreas(data);
+      setAreasStatus('ready');
+    } catch (error) {
+      console.error('Erro ao carregar as áreas:', error);
+      setAreasStatus('error');
+    }
+  };
+
+  useEffect(() => {
+    void loadAreas();
+  }, []);
+  const [passwordError, setPasswordError] = useState<string | undefined>();
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const idSenha = `${baseId}-senha`;
+  const signInHref = `/membros?next=${encodeURIComponent('/voluntarios/cadastro')}`;
 
   const tituloRef = useRef<HTMLHeadingElement>(null);
   const cartaoRef = useRef<HTMLDivElement>(null);
@@ -391,6 +420,32 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   useEffect(() => {
     setMaxNascimento(hojeISO());
     setPronto(true);
+
+    (async () => {
+      try {
+        const { data } = await actions.members.me();
+        const profile = data?.profile;
+        if (!profile) {
+          setAccount('signedOut');
+          return;
+        }
+        setDados({
+          nome: profile.full_name ?? '',
+          email: profile.email ?? '',
+          telefone: formatarTelefone(profile.phone ?? ''),
+          nascimento: profile.birth_date ?? '',
+        });
+        // Already a volunteer: start from the areas they chose before.
+        const { data: mine } = await actions.volunteers.mine();
+        if (mine?.volunteer) {
+          setAreas(mine.volunteer.area_ids ?? []);
+          setQuerOrientacao(Boolean(mine.volunteer.wants_guidance));
+        }
+        setAccount('member');
+      } catch {
+        setAccount('signedOut');
+      }
+    })();
   }, []);
 
   // Ao trocar de etapa, leva o foco ao título novo e volta ao topo do cartão.
@@ -404,8 +459,9 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
     cartaoRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   }, [etapa, concluido]);
 
-  const areasFiltradas = filtro === 'todas' ? AREAS : AREAS.filter((area) => area.categoria === filtro);
-  const linkWhatsApp = montarLinkWhatsApp(whatsappBase, montarResumo(dados, areas, querOrientacao));
+  const areasFiltradas = filtro === 'todas' ? allAreas : allAreas.filter((area) => area.categoria === filtro);
+  const selectedAreas = allAreas.filter((area) => areas.includes(area.id));
+  const linkWhatsApp = montarLinkWhatsApp(whatsappBase, montarResumo(dados, selectedAreas.map((area) => area.nome), querOrientacao));
 
   const atualizarDado = (campo: CampoDados, valor: string) => {
     setDados((atual) => ({ ...atual, [campo]: valor }) as DadosVoluntario);
@@ -442,10 +498,20 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   const continuarDados = (evento: SubmitEvent<HTMLFormElement>) => {
     evento.preventDefault();
     const erros = validarDados(dados);
-    if (Object.keys(erros).length > 0) {
+    const novaSenhaErro =
+      account !== 'signedOut'
+        ? undefined
+        : !password
+          ? 'Crie uma senha para sua conta.'
+          : password.length < MIN_PASSWORD_LENGTH
+            ? `Use pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
+            : undefined;
+    setPasswordError(novaSenhaErro);
+    if (Object.keys(erros).length > 0 || novaSenhaErro) {
       setErrosDados(erros);
       setMensagem('Confira os campos destacados para continuar.');
-      focarErroDados(erros);
+      if (Object.keys(erros).length > 0) focarErroDados(erros);
+      else passwordRef.current?.focus();
       return;
     }
     setErrosDados({});
@@ -483,9 +549,10 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
     setSalvando(true);
 
     try {
-      const { error } = await actions.volunteers.create({
-        fullName: dados.nome,
-        email: dados.email,
+      const { data: resultado, error } = await actions.volunteers.create({
+        ...(account === 'signedOut'
+          ? { account: { fullName: dados.nome, email: dados.email, password } }
+          : {}),
         phone: dados.telefone,
         birthDate: dados.nascimento,
         areaIds: [...areas],
@@ -493,7 +560,26 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
         contactConsent: consentimento,
       });
 
-      if (error) throw error;
+      if (error) {
+        janelaWhatsApp?.close();
+        // E-mail already has a member account: back to step 1, error on the e-mail field.
+        if (error.code === 'CONFLICT') {
+          setEtapa(1);
+          setErrosDados({ email: error.message });
+          setMensagem('');
+          setTimeout(() => emailRef.current?.focus(), 50);
+          return;
+        }
+        // Session expired between loading the form and sending it: ask for the account again.
+        if (error.code === 'UNAUTHORIZED') {
+          setAccount('signedOut');
+          setEtapa(1);
+          setMensagem(error.message);
+          return;
+        }
+        throw error;
+      }
+      setNeedsConfirmation(Boolean(resultado?.needsConfirmation));
 
       if (janelaWhatsApp) {
         janelaWhatsApp.location.href = linkWhatsApp;
@@ -510,18 +596,15 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
     }
   };
 
-  const reiniciar = () => {
-    setDados({ ...DADOS_INICIAIS });
-    setAreas([]);
-    setQuerOrientacao(false);
-    setConsentimento(false);
-    setErrosDados({});
-    setErroAreas(undefined);
-    setErroConsentimento(undefined);
-    setMensagem('');
-    setFiltro('todas');
-    setConcluido(false);
-    setEtapa(1);
+  const trocarConta = async () => {
+    try {
+      await actions.members.logout();
+    } finally {
+      setDados({ ...DADOS_INICIAIS });
+      setAreas([]);
+      setQuerOrientacao(false);
+      setAccount('signedOut');
+    }
   };
 
   const editarEtapa = (novaEtapa: Etapa) => {
@@ -533,9 +616,17 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   return (
     <div
       ref={cartaoRef}
-      className="scroll-mt-24 rounded-cartao border border-border bg-canvas p-5 sm:p-8"
+      className="scroll-mt-24 rounded-cartao bg-canvas p-5 sm:p-8"
       data-formulario-pronto={pronto ? 'true' : undefined}
     >
+      {account === 'loading' && (
+        <p role="status" className="py-10 text-center text-ink-muted">
+          Verificando sua conta…
+        </p>
+      )}
+
+      {account !== 'loading' && (
+      <>
       <Progresso etapa={etapa} concluido={concluido} />
 
       <div className="mt-8">
@@ -552,12 +643,18 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
               Cadastro enviado!
             </h3>
             <p className="mt-3 max-w-prose text-ink-muted">
-              Seu cadastro foi salvo. Abrimos o WhatsApp com um resumo para você enviar à liderança.
-              Se a aba não abriu, use o botão abaixo.
+              Você agora faz parte do time de voluntários. Abrimos o WhatsApp com um resumo para você enviar à
+              liderança; se a aba não abriu, use o botão abaixo.
             </p>
+            {needsConfirmation && (
+              <p role="status" className="mt-4 max-w-prose rounded-xl bg-surface p-4 text-sm text-ink">
+                <strong className="font-semibold">Falta um passo na sua conta de membro:</strong> enviamos um link para{' '}
+                {dados.email}. Confirme o e-mail para entrar na Área de Membros.
+              </p>
+            )}
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <section className="rounded-cartao border border-border bg-surface p-5">
+              <section className="rounded-cartao bg-surface p-5">
                 <h4 className="text-lg font-bold text-ink">Seus dados</h4>
                 <dl className="mt-4">
                   <Dado rotulo="Nome">{dados.nome}</Dado>
@@ -567,14 +664,14 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                 </dl>
               </section>
 
-              <section className="rounded-cartao border border-border bg-surface p-5">
+              <section className="rounded-cartao bg-surface p-5">
                 <h4 className="text-lg font-bold text-ink">Áreas de interesse</h4>
                 {areas.length > 0 ? (
                   <ul className="mt-4 flex flex-wrap gap-2">
-                    {AREAS.filter((area) => areas.includes(area.id)).map((area) => (
+                    {selectedAreas.map((area) => (
                       <li
                         key={area.id}
-                        className="rounded-full border border-border bg-canvas px-3 py-1.5 text-sm font-medium text-ink"
+                        className="rounded-full bg-canvas px-3 py-1.5 text-sm font-medium text-ink"
                       >
                         {area.nome}
                       </li>
@@ -596,9 +693,6 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                 <Icone nome="whatsapp" className="h-5 w-5" />
                 Abrir WhatsApp novamente
               </a>
-              <button type="button" onClick={reiniciar} className={BTN_SECUNDARIO}>
-                Fazer novo cadastro
-              </button>
             </div>
             <button type="button" onClick={() => editarEtapa(3)} className={`${LINK_VOLTAR} mt-4`}>
               <Icone nome="setaVoltar" className="h-4 w-4" />
@@ -617,17 +711,57 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   >
                     Seus dados
                   </h3>
-                  <p className="mt-2 text-ink-muted">Preencha seus dados para continuar sua jornada.</p>
+                  <p className="mt-2 text-ink-muted">
+                    {account === 'member'
+                      ? 'Confira seu WhatsApp e sua data de nascimento. É por eles que a liderança vai falar com você.'
+                      : 'Todo voluntário faz parte da igreja como membro. Use sua conta ou crie uma agora, no mesmo cadastro.'}
+                  </p>
                 </div>
 
+                {account === 'member' ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span aria-hidden="true" className="logo-pomba-icone block h-5 w-[1.74rem] shrink-0" />
+                      <p className="min-w-0 text-sm">
+                        <span className="block font-semibold text-ink">{dados.nome}</span>
+                        <span className="block truncate text-ink-muted">{dados.email}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={trocarConta}
+                      className="text-sm font-semibold text-ink underline underline-offset-4 hover:text-accent-text"
+                    >
+                      Não é você? Trocar de conta
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <a
+                      href={signInHref}
+                      className="flex min-h-12 w-full items-center justify-center gap-3 rounded-full border border-border-strong/50 bg-canvas px-5 font-semibold text-ink shadow-[0_1px_2px_rgb(46_44_36/0.06)] transition-colors duration-150 hover:bg-surface"
+                    >
+                      <span aria-hidden="true" className="logo-pomba-icone block h-5 w-[1.74rem] shrink-0" />
+                      Entrar com minha conta de membro
+                    </a>
+                    <p className="mt-5 flex items-center gap-3 text-sm text-ink-muted" aria-hidden="true">
+                      <span className="h-px flex-1 bg-border" />
+                      ou crie sua conta
+                      <span className="h-px flex-1 bg-border" />
+                    </p>
+                  </div>
+                )}
+
                 {mensagem && (
-                  <p role="alert" className="flex items-start gap-2 rounded-xl border border-accent-text bg-surface p-3 text-sm font-semibold text-ink">
+                  <p role="alert" className="flex items-start gap-2 rounded-xl bg-surface p-3 text-sm font-semibold text-ink">
                     <Icone nome="alerta" className="mt-0.5 h-4 w-4 shrink-0 text-accent-text" />
                     {mensagem}
                   </p>
                 )}
 
                 <div className="grid gap-5 sm:grid-cols-2">
+                  {account === 'signedOut' && (
+                  <>
                   <Campo id={idNome} rotulo="Nome completo" erro={errosDados.nome} className="sm:col-span-2">
                     <input
                       ref={nomeRef}
@@ -659,7 +793,14 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                       placeholder="seu@email.com"
                       className={classeEntrada(errosDados.email)}
                     />
+                    {errosDados.email?.includes('já tem uma conta') && (
+                      <a href={signInHref} className="mt-2 inline-flex text-sm font-semibold text-accent-text underline-offset-4 hover:underline">
+                        Entrar com essa conta
+                      </a>
+                    )}
                   </Campo>
+                  </>
+                  )}
 
                   <Campo
                     id={idTelefone}
@@ -701,12 +842,38 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                     />
                   </Campo>
 
+                  {account === 'signedOut' && (
+                    <Campo
+                      id={idSenha}
+                      rotulo="Crie uma senha"
+                      erro={passwordError}
+                      dica={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres. É com ela que você entra na Área de Membros.`}
+                      className="sm:col-span-2"
+                    >
+                      <input
+                        ref={passwordRef}
+                        id={idSenha}
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setPasswordError(undefined);
+                        }}
+                        aria-invalid={passwordError ? true : undefined}
+                        aria-describedby={passwordError ? `${idSenha}-erro` : `${idSenha}-dica`}
+                        className={classeEntrada(passwordError)}
+                      />
+                    </Campo>
+                  )}
+
                 </div>
 
                 <div className="flex items-start gap-3 rounded-xl bg-surface p-4">
                   <Icone nome="escudo" className="mt-0.5 h-5 w-5 shrink-0 text-accent-text" />
                   <p className="text-sm text-ink-muted">
-                    Seus dados serão salvos com segurança para que a liderança possa entrar em contato com você.
+                    Usamos esses dados só para a liderança falar com você sobre o voluntariado.
                   </p>
                 </div>
 
@@ -739,7 +906,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                 </div>
 
                 {mensagem && (
-                  <p role="alert" className="flex items-start gap-2 rounded-xl border border-accent-text bg-surface p-3 text-sm font-semibold text-ink">
+                  <p role="alert" className="flex items-start gap-2 rounded-xl bg-surface p-3 text-sm font-semibold text-ink">
                     <Icone nome="alerta" className="mt-0.5 h-4 w-4 shrink-0 text-accent-text" />
                     {mensagem}
                   </p>
@@ -784,6 +951,15 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   className="min-w-0 border-0 p-0 outline-none"
                 >
                   <legend className="sr-only">Áreas de atuação</legend>
+                  {areasStatus === 'loading' && <p role="status" className="text-sm text-ink-muted">Carregando áreas…</p>}
+                  {areasStatus === 'error' && (
+                    <p role="alert" className="rounded-xl bg-surface p-3 text-sm text-ink">
+                      Não foi possível carregar as áreas.{' '}
+                      <button type="button" onClick={() => void loadAreas()} className="font-semibold text-accent-text underline">
+                        Tentar novamente
+                      </button>
+                    </p>
+                  )}
                   <div className="grid gap-4 md:grid-cols-2">
                     {areasFiltradas.map((area) => (
                       <CartaoArea
@@ -803,7 +979,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   </p>
                 )}
 
-                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong">
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-surface p-4">
                   <input
                     type="checkbox"
                     checked={querOrientacao}
@@ -867,7 +1043,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                 </div>
 
                 {mensagem && (
-                  <p role="alert" className="flex items-start gap-2 rounded-xl border border-accent-text bg-surface p-3 text-sm font-semibold text-ink">
+                  <p role="alert" className="flex items-start gap-2 rounded-xl bg-surface p-3 text-sm font-semibold text-ink">
                     <Icone nome="alerta" className="mt-0.5 h-4 w-4 shrink-0 text-accent-text" />
                     {mensagem}
                   </p>
@@ -886,10 +1062,10 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   <Resumo titulo="Áreas de interesse" onEditar={() => editarEtapa(2)}>
                     {areas.length > 0 ? (
                       <ul className="flex flex-wrap gap-2">
-                        {AREAS.filter((area) => areas.includes(area.id)).map((area) => (
+                        {selectedAreas.map((area) => (
                           <li
                             key={area.id}
-                            className="rounded-full border border-border bg-canvas px-3 py-1.5 text-sm font-medium text-ink"
+                            className="rounded-full bg-canvas px-3 py-1.5 text-sm font-medium text-ink"
                           >
                             {area.nome}
                           </li>
@@ -907,7 +1083,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                 </div>
 
                 <div>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-4">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-surface p-4">
                     <input
                       ref={consentimentoRef}
                       id={idConsentimento}
@@ -938,7 +1114,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   )}
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4">
+                <div className="flex items-start gap-3 rounded-xl bg-surface p-4">
                   <Icone nome="whatsapp" className="mt-0.5 h-5 w-5 shrink-0 text-accent-text" />
                   <p className="text-sm text-ink-muted">
                     Ao continuar, abriremos o WhatsApp com um resumo do cadastro. A mensagem só é enviada
@@ -953,7 +1129,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
                   </button>
                   <button type="submit" disabled={salvando} className={`${BTN_PRIMARIO} w-full sm:w-auto disabled:cursor-wait disabled:opacity-60`}>
                     <Icone nome="whatsapp" className="h-5 w-5" />
-                    {salvando ? 'Salvando cadastro…' : 'Abrir WhatsApp com resumo'}
+                    {salvando ? 'Salvando cadastro…' : 'Voluntariar'}
                   </button>
                 </div>
               </form>
@@ -961,6 +1137,8 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
           </>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

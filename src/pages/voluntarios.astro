@@ -6,13 +6,6 @@ import HeroImersivo from '../components/ui/HeroImersivo.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
 import Card from '../components/ui/Card.astro';
-import Chip from '../components/ui/Chip.astro';
-import FormularioVoluntariado from '../components/islands/FormularioVoluntariado';
-import { WHATSAPP_VOLUNTARIADO } from '../lib/voluntariado';
-
-// A URL é montada aqui, no servidor, e chega pronta à ilha. O JS do formulário não contém
-// nenhuma URL externa literal: o link do WhatsApp só é aberto por ação da pessoa.
-const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
 ---
 
 <BaseLayout
@@ -35,35 +28,22 @@ const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
     <Button href="#caminhos">Quero servir</Button>
   </HeroImersivo>
 
-  <Section id="caminhos" titulo="Por onde começar?" eyebrow="Dois caminhos" tom="elevado">
+  <Section id="caminhos" titulo="Por onde começar?" eyebrow="Hangar" tom="elevado">
     <div class="grid gap-6 md:grid-cols-2">
-      <Card titulo="Quero ser voluntário" href="#cadastro" class="group">
+      <Card titulo="Quero ser voluntário" href="/voluntarios/cadastro" class="group">
         <p>Ainda não sirvo, mas quero descobrir meus dons e começar minha jornada.</p>
         <p class="mt-5 inline-flex items-center gap-2 font-semibold text-accent-text">
           Começar agora
           <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
         </p>
       </Card>
-      <Card titulo="Já sou voluntário" href="#area-voluntario" class="group">
+      <Card titulo="Já sou voluntário" href="/membros" class="group">
         <p>Já faço parte de uma equipe e quero acessar minha área ou ver escalas.</p>
         <p class="mt-5 inline-flex items-center gap-2 font-semibold text-accent-text">
-          Ver área do voluntário
+          Entrar na área de membros
           <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
         </p>
       </Card>
-    </div>
-
-    <div id="area-voluntario" class="mt-8 rounded-cartao border border-border bg-canvas p-5 sm:p-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <Chip variante="azul" class="shrink-0">Em breve</Chip>
-        <div>
-          <h3 class="text-lg font-bold text-ink">Área do voluntário</h3>
-          <p class="mt-1 text-ink-muted">
-            Estamos preparando um espaço para escalas, treinamentos e materiais. Enquanto isso, fale com a
-            liderança da sua equipe.
-          </p>
-        </div>
-      </div>
     </div>
   </Section>
 
@@ -116,33 +96,10 @@ const whatsappBase = `https://wa.me/${WHATSAPP_VOLUNTARIADO}`;
       </li>
     </ol>
   </Section>
-
-  <Section
-    id="cadastro"
-    titulo="Quero ser voluntário"
-    eyebrow="Cadastro"
-    subtitulo="Responda algumas perguntas e conecte-se à liderança."
-    tom="elevado"
-    alinhamento="centro"
-  >
-    <div class="mx-auto max-w-3xl text-left">
-      <noscript>
-        <p class="mb-4 rounded-cartao border border-border bg-canvas p-4 text-sm text-ink-muted">
-          O cadastro em etapas precisa de JavaScript. Se preferir, fale com a liderança pelo WhatsApp:
-          <a href={whatsappBase} class="font-semibold text-accent-text underline underline-offset-4">
-            (51) 99394-3907
-          </a>.
-        </p>
-      </noscript>
-      <FormularioVoluntariado client:load whatsappBase={whatsappBase} />
-    </div>
-  </Section>
 </BaseLayout>
 
 <style>
-  #caminhos,
-  #area-voluntario,
-  #cadastro {
+  #caminhos {
     scroll-margin-top: 5rem;
   }
 </style>

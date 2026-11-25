@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   DADOS_INICIAIS,
-  AREAS,
   emailValido,
   formatarData,
   formatarTelefone,
@@ -94,7 +93,7 @@ describe('validarDados', () => {
 describe('validarAreas', () => {
   it('exige uma área ou pedido de orientação', () => {
     expect(validarAreas([], false).areas).toBeTruthy();
-    expect(validarAreas([AREAS[0]!.id], false)).toEqual({});
+    expect(validarAreas(['louvor'], false)).toEqual({});
     expect(validarAreas([], true)).toEqual({});
   });
 });
@@ -108,7 +107,7 @@ describe('validarConsentimento', () => {
 
 describe('montarResumo', () => {
   it('inclui os dados, as áreas escolhidas e o pedido de orientação', () => {
-    const resumo = montarResumo(dadosValidos, ['louvor', 'recepcao'], true);
+    const resumo = montarResumo(dadosValidos, ['Louvor e Adoração', 'Recepção'], true);
     expect(resumo).toContain('*Nome:* Maria Silva');
     expect(resumo).toContain('*E-mail:* maria@exemplo.com');
     expect(resumo).toContain('*WhatsApp:* (11) 98765-4321');
