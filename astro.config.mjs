@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import { loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import { rm } from 'node:fs/promises';
@@ -18,6 +19,21 @@ const devOnlyPages = {
     },
   },
 };
+
+// PUBLIC_* variables are inlined into the browser bundle, so a Supabase secret key there
+// would give any visitor full access to the database. Fail the build instead.
+const isSecretKey = (value) => {
+  if (value.startsWith('sb_secret_')) return true;
+  const payload = value.split('.')[1];
+  return Boolean(payload) && Buffer.from(payload, 'base64url').toString().includes('"service_role"');
+};
+
+const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), 'PUBLIC_');
+for (const [name, value] of Object.entries(env)) {
+  if (isSecretKey(value)) {
+    throw new Error(`${name} holds a Supabase secret key. Use the publishable key (sb_publishable_...).`);
+  }
+}
 
 export default defineConfig({
   site: 'https://ivales.org',
