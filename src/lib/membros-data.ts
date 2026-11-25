@@ -203,7 +203,7 @@ export const MINISTERIOS_VOLUNTARIADO: MinisterioVoluntario[] = [
   },
   {
     id: 'min-kids',
-    nome: 'Vales Kids (Infantil)',
+    nome: 'iVales Kids',
     resumo: 'Ensinar a Palavra de Deus de forma criativa e segura para crianças de 1 a 11 anos.',
     frequencia: '2 vezes por mês',
     inscrito: false,
@@ -246,7 +246,7 @@ export const PERFIL_DEMONSTRACAO: PerfilMembro = {
       id: 'fam-2',
       nome: 'Maria Oliveira',
       parentesco: 'Filho(a)',
-      faixaEtaria: 'Vales Kids (6–8 anos)',
+      faixaEtaria: 'iVales Kids (6–8 anos)',
     },
   ],
 };

@@ -28,7 +28,7 @@ export interface AreaVoluntariado {
 export const AREAS: readonly AreaVoluntariado[] = [
   {
     id: 'next',
-    nome: 'Next (Crianças)',
+    nome: 'iVales Kids',
     descricao: 'Ministério infantil que cuida e ensina as crianças durante os cultos.',
     categoria: 'criancas',
     icone: 'sorriso',
