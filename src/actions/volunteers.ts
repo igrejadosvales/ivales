@@ -49,7 +49,7 @@ export const volunteers = {
       if (!memberId) throw notSignedIn();
       const { data, error } = await requireSupabase()
         .from('volunteers')
-        .select('area_ids, wants_guidance')
+        .select('area_ids, wants_guidance, serving_status')
         .eq('member_id', memberId)
         .maybeSingle();
       if (error) console.error('volunteer lookup failed:', error.code);
@@ -135,8 +135,9 @@ export const volunteers = {
         throw new ActionError({ code: 'INTERNAL_SERVER_ERROR', message: 'Não foi possível salvar seu cadastro.' });
       }
 
-      // One record per member: signing up again updates the chosen areas.
-      const { error } = await supabase.from('volunteers').upsert(
+      // One record per member: signing up again updates the chosen areas. serving_status is left out on
+      // purpose: new records default to 'pending' and an existing status is never reset.
+      const { data: record, error } = await supabase.from('volunteers').upsert(
         {
           member_id: memberId,
           area_ids: input.areaIds,
@@ -144,12 +145,12 @@ export const volunteers = {
           contact_consent: input.contactConsent,
         },
         { onConflict: 'member_id' },
-      );
+      ).select('serving_status').single();
       if (error) {
         console.error('volunteer upsert failed:', error.code);
         throw new ActionError({ code: 'INTERNAL_SERVER_ERROR', message: 'Não foi possível salvar seu cadastro.' });
       }
-      return { ok: true, needsConfirmation };
+      return { ok: true, needsConfirmation, servingStatus: record.serving_status as string };
     },
   }),
 };

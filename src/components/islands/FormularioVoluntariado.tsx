@@ -354,6 +354,12 @@ function Resumo({
   );
 }
 
+const SERVING_STATUS_LABELS: Record<string, string> = {
+  pending: 'Servindo pendente',
+  serving: 'Servindo',
+  inactive: 'Inativo',
+};
+
 function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   const baseId = useId().replace(/:/g, '');
   const idNome = `${baseId}-nome`;
@@ -403,6 +409,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
   }, []);
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [servingStatus, setServingStatus] = useState('pending');
   const passwordRef = useRef<HTMLInputElement>(null);
   const idSenha = `${baseId}-senha`;
   const signInHref = `/membros?next=${encodeURIComponent('/voluntarios/cadastro')}`;
@@ -586,6 +593,7 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
       } else {
         window.open(linkWhatsApp, '_blank', 'noopener,noreferrer');
       }
+      setServingStatus(resultado?.servingStatus ?? 'pending');
       setConcluido(true);
     } catch (erro) {
       console.error('Erro ao salvar cadastro de voluntário:', erro);
@@ -643,8 +651,13 @@ function Fluxo({ whatsappBase }: { whatsappBase: string }) {
               Cadastro enviado!
             </h3>
             <p className="mt-3 max-w-prose text-ink-muted">
-              Você agora faz parte do time de voluntários. Abrimos o WhatsApp com um resumo para você enviar à
-              liderança; se a aba não abriu, use o botão abaixo.
+              {servingStatus === 'serving'
+                ? 'Atualizamos suas áreas. '
+                : 'Seu cadastro foi salvo e aguarda a liderança. '}
+              Abrimos o WhatsApp com um resumo para você enviar; se a aba não abriu, use o botão abaixo.
+            </p>
+            <p className="mt-4 inline-flex rounded-full bg-surface px-3 py-1.5 text-sm font-semibold text-ink">
+              Status: {SERVING_STATUS_LABELS[servingStatus] ?? servingStatus}
             </p>
             {needsConfirmation && (
               <p role="status" className="mt-4 max-w-prose rounded-xl bg-surface p-4 text-sm text-ink">
